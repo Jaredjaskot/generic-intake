@@ -2,16 +2,16 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install jaskot-config first (separate layer for caching)
-COPY jaskot-config /opt/jaskot-config
+# Install jaskot-config (copied into _jaskot-config/ by deploy script)
+COPY _jaskot-config /opt/jaskot-config
 RUN pip install --no-cache-dir /opt/jaskot-config
 
 # Install app dependencies
-COPY generic-intake/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy app code
-COPY generic-intake/ .
+COPY . .
 
 EXPOSE 5001
 

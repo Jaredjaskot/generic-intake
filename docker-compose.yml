@@ -2,9 +2,7 @@ version: "3.8"
 
 services:
   generic-intake:
-    build:
-      context: ..
-      dockerfile: generic-intake/Dockerfile
+    build: .
     container_name: generic-intake
     restart: unless-stopped
     ports:

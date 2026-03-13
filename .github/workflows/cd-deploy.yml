@@ -84,12 +84,29 @@ jobs:
             done
 
             # Pull latest code
-            echo "[1/3] Pulling latest code..."
+            echo "[1/4] Pulling latest code..."
             git fetch origin main
             git reset --hard origin/main
 
+            # Copy jaskot-config into build context
+            echo "[2/4] Copying jaskot-config into build context..."
+            rm -rf "$DEPLOY_PATH/_jaskot-config"
+            cp -r "$CONFIG_PATH" "$DEPLOY_PATH/_jaskot-config"
+
+            # Update Caddy config to add /intake* route
+            echo "[3/4] Checking Caddy config..."
+            CADDY_FILE="/opt/calcom/Caddyfile"
+            if ! grep -q 'generic-intake:5001' "$CADDY_FILE" 2>/dev/null; then
+              # Insert generic-intake route before the Cal.com catch-all
+              sed -i '/# Everything else/i\    # Generic intake funnel routes → generic-intake container\n    handle /intake* {\n        reverse_proxy generic-intake:5001\n    }\n' "$CADDY_FILE"
+              docker exec calcom-caddy caddy reload --config /etc/caddy/Caddyfile
+              echo "Caddy config updated — added /intake* route"
+            else
+              echo "Caddy config already has generic-intake route"
+            fi
+
             # Build and restart
-            echo "[2/3] Building and restarting..."
+            echo "[4/4] Building and restarting..."
             docker compose down
             docker compose up -d --build
 
