@@ -1,0 +1,110 @@
+name: CD — Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+# ================================================================
+# Required GitHub Secrets:
+#   DEPLOY_HOST          — 45.55.45.24 (Cal.com droplet)
+#   DEPLOY_USER          — root
+#   DEPLOY_SSH_KEY       — SSH private key for droplet
+#   STRIPE_SECRET_KEY    — Stripe secret key
+#   STRIPE_PUBLIC_KEY    — Stripe publishable key
+#   STRIPE_WEBHOOK_SECRET — Stripe webhook signing secret
+#   ADMIN_AUTH_TOKEN     — Staff auth token
+#   SECRET_KEY           — Flask secret key
+#   CLIO_CLIENT_ID       — Clio OAuth client ID
+#   CLIO_CLIENT_SECRET   — Clio OAuth client secret
+# ================================================================
+
+jobs:
+  deploy:
+    name: Deploy to Droplet
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            echo "=== Deploying generic-intake ==="
+            echo "Commit: ${{ github.sha }}"
+
+            DEPLOY_PATH="/opt/generic-intake"
+            CONFIG_PATH="/opt/jaskot-config"
+
+            # Ensure directories exist
+            mkdir -p "$DEPLOY_PATH" "$DEPLOY_PATH/data"
+
+            # Clone/update jaskot-config
+            if [ -d "$CONFIG_PATH/.git" ]; then
+              cd "$CONFIG_PATH" && git fetch origin main && git reset --hard origin/main
+            else
+              git clone https://github.com/Jaredjaskot/jaskot-config.git "$CONFIG_PATH" 2>/dev/null || true
+              # If no repo, copy from sijs-intake or fail gracefully
+              if [ ! -d "$CONFIG_PATH" ]; then
+                echo "WARNING: jaskot-config not available"
+              fi
+            fi
+
+            cd "$DEPLOY_PATH"
+
+            # Update .env
+            echo "[0/3] Updating environment variables..."
+            ENV_FILE="$DEPLOY_PATH/.env"
+            touch "$ENV_FILE"
+            for VAR_LINE in \
+              "SECRET_KEY=${{ secrets.SECRET_KEY }}" \
+              "ADMIN_AUTH_TOKEN=${{ secrets.ADMIN_AUTH_TOKEN }}" \
+              "STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}" \
+              "STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }}" \
+              "STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+              "CLIO_CLIENT_ID=${{ secrets.CLIO_CLIENT_ID }}" \
+              "CLIO_CLIENT_SECRET=${{ secrets.CLIO_CLIENT_SECRET }}" \
+              "CLIO_TOKEN_FILE=/app/data/clio_tokens.json" \
+              "DATABASE_URL=sqlite:////app/data/intake.db" \
+              "BASE_URL=https://book.jaskot.law"
+            do
+              VAR_NAME="${VAR_LINE%%=*}"
+              if [ -n "${VAR_LINE#*=}" ]; then
+                if grep -q "^${VAR_NAME}=" "$ENV_FILE" 2>/dev/null; then
+                  sed -i "s|^${VAR_NAME}=.*|${VAR_LINE}|" "$ENV_FILE"
+                else
+                  echo "$VAR_LINE" >> "$ENV_FILE"
+                fi
+              fi
+            done
+
+            # Pull latest code
+            echo "[1/3] Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Build and restart
+            echo "[2/3] Building and restarting..."
+            docker compose down
+            docker compose up -d --build
+
+            # Health check
+            echo "[3/3] Verifying health..."
+            sleep 10
+            STATUS=$(curl -sf "http://localhost:5001/intake/health" | grep -o '"status":"ok"' || echo 'UNHEALTHY')
+
+            echo ""
+            echo "=== Deploy Complete ==="
+            echo "Health: $STATUS"
+
+            if [ "$STATUS" = "UNHEALTHY" ]; then
+              echo "WARNING: Service is unhealthy!"
+              echo "--- Container logs ---"
+              docker compose logs --tail=50
+              exit 1
+            fi

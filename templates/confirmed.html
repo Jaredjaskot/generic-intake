@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}{% if lang == 'es' %}Confirmado{% else %}Confirmed{% endif %} | Jaskot Law{% endblock %}
+
+{% block head_extra %}
+<style>
+    .steps-bar { background: var(--navy-light); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 12px 20px; }
+    .steps-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+    .step { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 500; color: var(--gray-500); letter-spacing: 0.02em; white-space: nowrap; }
+    .step-number { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; border: 2px solid var(--gray-600); color: var(--gray-500); background: transparent; flex-shrink: 0; }
+    .step.active { color: var(--gold); }
+    .step.active .step-number { border-color: var(--gold); color: var(--white); background: var(--gold); }
+    .step.completed { color: var(--gold-light); }
+    .step.completed .step-number { border-color: var(--gold-light); background: var(--gold-light); color: var(--white); font-size: 0; }
+    .step.completed .step-number::after { content: '\2713'; font-size: 0.72rem; font-weight: 700; }
+    .step-arrow { color: var(--gray-600); font-size: 0.65rem; margin: 0 8px; flex-shrink: 0; }
+
+    .hero { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); text-align: center; padding: 52px 32px 44px; margin-bottom: 24px; position: relative; overflow: hidden; }
+    .hero h1 { color: var(--white); font-size: 2rem; margin-top: 28px; margin-bottom: 12px; }
+    .hero h1 span { color: var(--gold); }
+    .hero p { color: rgba(255,255,255,0.6); font-size: 0.95rem; max-width: 480px; margin: 0 auto; }
+    .success-check { width: 64px; height: 64px; border-radius: 50%; background: rgba(45,138,78,0.2); border: 3px solid #2d8a4e; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 1.8rem; color: #2d8a4e; }
+
+    .checklist-title { font-family: var(--font-heading); font-size: 1.15rem; color: var(--gray-700); margin-bottom: 4px; }
+    .checklist-subtitle { font-size: 0.85rem; color: var(--gray-500); margin-bottom: 20px; }
+    .checklist-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--gray-100); }
+    .checklist-item:last-child { border-bottom: none; }
+    .checklist-icon { width: 28px; height: 28px; border-radius: 50%; background: var(--gray-100); border: 2px solid var(--gray-300); flex-shrink: 0; margin-top: 2px; }
+    .checklist-doc { font-size: 0.9rem; font-weight: 600; color: var(--gray-700); margin-bottom: 2px; }
+    .checklist-detail { font-size: 0.8rem; color: var(--gray-500); line-height: 1.5; }
+
+    .next-steps { background: var(--green-light); border: 1px solid #2d8a4e; border-radius: var(--radius-lg); padding: 20px 24px; margin-top: 24px; }
+    .next-steps h3 { color: #155724; font-size: 1rem; margin-bottom: 8px; }
+    .next-steps p { font-size: 0.88rem; color: #155724; line-height: 1.6; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="steps-bar">
+    <div class="steps-inner">
+        <div class="step completed"><span class="step-number">1</span><span>{% if lang == 'es' %}Reservar{% else %}Book{% endif %}</span></div>
+        <span class="step-arrow">&#9656;</span>
+        <div class="step completed"><span class="step-number">2</span><span>{% if lang == 'es' %}Contrato{% else %}Retainer{% endif %}</span></div>
+        <span class="step-arrow">&#9656;</span>
+        <div class="step active"><span class="step-number">3</span><span>{% if lang == 'es' %}Confirmado{% else %}Confirmed{% endif %}</span></div>
+    </div>
+</div>
+
+<section class="hero">
+    <div class="success-check">&#10003;</div>
+    <h1>
+        {% if lang == 'es' %}
+            <span>&#161;Todo Listo!</span>
+        {% else %}
+            <span>You're All Set!</span>
+        {% endif %}
+    </h1>
+    <p>
+        {% if lang == 'es' %}
+            Su contrato ha sido firmado y el pago procesado exitosamente.
+        {% else %}
+            Your retainer has been signed and payment processed successfully.
+        {% endif %}
+    </p>
+</section>
+
+<div class="main" style="padding-top: 0;">
+    <!-- Document Checklist -->
+    <div class="section">
+        <div class="checklist-title">
+            {% if lang == 'es' %}Documentos Necesarios{% else %}Documents Needed{% endif %}
+        </div>
+        <div class="checklist-subtitle">
+            {% if lang == 'es' %}Por favor re&uacute;na los siguientes documentos para su caso.{% else %}Please gather the following documents for your case.{% endif %}
+        </div>
+        {% for item in checklist %}
+        <div class="checklist-item">
+            <div class="checklist-icon"></div>
+            <div>
+                <div class="checklist-doc">{{ item.doc }}</div>
+                <div class="checklist-detail">{{ item.detail }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Next Steps -->
+    <div class="next-steps">
+        <h3>{% if lang == 'es' %}Pr&oacute;ximos Pasos{% else %}Next Steps{% endif %}</h3>
+        <p>
+            {% if lang == 'es' %}
+                Recibir&aacute; un correo electr&oacute;nico con su contrato firmado y los detalles de su cita. Si tiene alguna pregunta, cont&aacute;ctenos al (240) 607-5244 o info@jaskot.law.
+            {% else %}
+                You will receive an email with your signed retainer agreement and appointment details. If you have any questions, contact us at (240) 607-5244 or info@jaskot.law.
+            {% endif %}
+        </p>
+    </div>
+</div>
+{% endblock %}

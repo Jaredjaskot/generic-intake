@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Login — Intake | Jaskot Law</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #121212; --navy-light: #1e1e1e; --navy-dark: #0a0a0a;
+            --gold: #af2a28; --white: #ffffff; --gray-100: #f2f2f2;
+            --gray-200: #e5e5e5; --gray-500: #6c6c6c; --gray-600: #4a4a4a; --gray-700: #121212;
+            --font-body: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-heading: 'Frank Ruhl Libre', Georgia, serif;
+            --radius: 12px; --radius-sm: 8px; --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-body); color: var(--gray-600); background: var(--gray-100); line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+        .header { background: var(--navy-dark); padding: 14px 24px; }
+        .header-inner { max-width: 1100px; margin: 0 auto; }
+        .header-brand { color: var(--white); font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; text-decoration: none; }
+        .main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
+        .login-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-md); border: 1px solid var(--gray-200); width: 100%; max-width: 400px; overflow: hidden; }
+        .login-header { background: var(--navy); padding: 20px 24px; text-align: center; }
+        .login-header h1 { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 600; color: var(--white); }
+        .login-header p { font-size: 0.82rem; color: rgba(255,255,255,0.5); margin-top: 4px; }
+        .login-body { padding: 28px 24px; }
+        .form-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 12px 14px; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.95rem; color: var(--gray-700); outline: none; transition: border-color 0.2s; }
+        .form-input:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(0,0,0,0.1); }
+        .btn-login { display: block; width: 100%; padding: 14px 24px; background: var(--navy); color: var(--white); border: none; border-radius: 52px; font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
+        .btn-login:hover { background: var(--navy-light); }
+        .error-msg { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.85rem; margin-bottom: 16px; }
+        .footer { padding: 20px 24px; background: var(--navy-dark); text-align: center; }
+        .footer p { font-size: 0.72rem; color: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+    <header class="header"><div class="header-inner"><a href="#" class="header-brand">Jaskot Law</a></div></header>
+    <main class="main">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Staff Access</h1>
+                <p>Intake — Magic Link Generator</p>
+            </div>
+            <div class="login-body">
+                {% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+                <form method="POST">
+                    <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+                    <label class="form-label" for="token">Access Token</label>
+                    <input type="password" class="form-input" id="token" name="token" placeholder="Enter staff token" required autofocus>
+                    <button type="submit" class="btn-login">Log In</button>
+                </form>
+            </div>
+        </div>
+    </main>
+    <footer class="footer"><p>&copy; 2026 Jaskot Law Group, PLLC. Internal use only.</p></footer>
+</body>
+</html>

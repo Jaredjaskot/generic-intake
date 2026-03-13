@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Link Generator — Staff | Jaskot Law</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #121212; --navy-light: #1e1e1e; --navy-dark: #0a0a0a;
+            --gold: #af2a28; --gold-light: #c23230; --gold-pale: #fde8e8;
+            --white: #ffffff; --gray-50: #f8f9fa; --gray-100: #f2f2f2;
+            --gray-200: #e5e5e5; --gray-300: #d5d5d5; --gray-400: #a0a0a0;
+            --gray-500: #6c6c6c; --gray-600: #4a4a4a; --gray-700: #121212;
+            --green: #2d8a4e; --green-light: #e6f4ec;
+            --red: #c53030; --red-light: #fde8e8;
+            --blue: #2563eb; --blue-light: #dbeafe;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+            --radius: 8px; --radius-lg: 12px;
+            --font-body: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-heading: 'Frank Ruhl Libre', Georgia, serif;
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-body); color: var(--gray-600); background: var(--gray-100); line-height: 1.6; min-height: 100vh; }
+
+        /* Header */
+        .header { background: var(--navy-dark); padding: 14px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+        .header-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header-brand { color: var(--white); font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; text-decoration: none; }
+        .header-badge { font-size: 0.7rem; background: var(--gold); color: var(--white); padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+        .btn-logout { font-size: 0.78rem; color: var(--gray-400); background: none; border: 1px solid var(--gray-500); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; text-decoration: none; transition: all 0.2s; }
+        .btn-logout:hover { color: var(--white); border-color: var(--white); }
+
+        .main { max-width: 900px; margin: 0 auto; padding: 24px 16px 80px; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 0; margin-bottom: 24px; background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); overflow: hidden; }
+        .tab { flex: 1; padding: 14px 20px; text-align: center; font-size: 0.88rem; font-weight: 600; color: var(--gray-500); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
+        .tab:hover { color: var(--gray-700); background: var(--gray-50); }
+        .tab.active { color: var(--navy); border-bottom-color: var(--gold); background: var(--white); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Progress Bar */
+        .progress-bar { display: flex; align-items: center; justify-content: center; padding: 20px 0; margin-bottom: 24px; }
+        .progress-step { display: flex; align-items: center; gap: 8px; }
+        .step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; border: 2px solid var(--gray-300); color: var(--gray-400); background: var(--white); transition: all 0.3s; flex-shrink: 0; }
+        .step-label { font-size: 0.78rem; font-weight: 600; color: var(--gray-400); white-space: nowrap; transition: color 0.3s; }
+        .progress-step.active .step-circle { border-color: var(--gold); background: var(--gold); color: var(--white); }
+        .progress-step.active .step-label { color: var(--navy); }
+        .progress-step.completed .step-circle { border-color: var(--green); background: var(--green); color: var(--white); }
+        .progress-step.completed .step-circle::after { content: '\2713'; }
+        .progress-step.completed .step-circle .step-num { display: none; }
+        .progress-step.completed .step-label { color: var(--green); }
+        .step-line { width: 40px; height: 2px; background: var(--gray-300); margin: 0 8px; transition: background 0.3s; }
+        .step-line.completed { background: var(--green); }
+
+        /* Cards */
+        .card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--gray-200); padding: 24px; margin-bottom: 20px; }
+        .card-title { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 600; color: var(--navy); margin-bottom: 16px; }
+        .card-subtitle { font-size: 0.82rem; color: var(--gray-500); margin-top: -12px; margin-bottom: 16px; }
+
+        /* Form elements */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--gray-700); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 0.9rem; font-family: inherit; color: var(--gray-700); transition: border-color 0.2s; background: var(--white); }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(18,18,18,0.08); }
+        .form-textarea { resize: vertical; min-height: 60px; }
+        .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236c6c6c' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+        .input-addon { display: flex; align-items: center; }
+        .input-addon .prefix { padding: 10px 12px; background: var(--gray-50); border: 1px solid var(--gray-300); border-right: none; border-radius: var(--radius) 0 0 var(--radius); font-size: 0.9rem; color: var(--gray-500); font-weight: 600; }
+        .input-addon .form-input { border-radius: 0 var(--radius) var(--radius) 0; }
+
+        /* Radio buttons */
+        .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .radio-option { position: relative; }
+        .radio-option input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .radio-option label { display: block; padding: 8px 16px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 0.85rem; font-weight: 600; color: var(--gray-600); cursor: pointer; transition: all 0.2s; background: var(--white); }
+        .radio-option input:checked + label { background: var(--navy); color: var(--white); border-color: var(--navy); }
+        .radio-option label:hover { border-color: var(--navy); }
+
+        /* Lookup */
+        .lookup-row { display: flex; gap: 8px; }
+        .lookup-row .form-input { flex: 1; }
+        .btn-lookup { padding: 10px 16px; background: var(--gray-50); border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 0.82rem; font-weight: 600; color: var(--gray-700); cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.2s; }
+        .btn-lookup:hover { background: var(--gray-200); }
+        .lookup-result { margin-top: 10px; padding: 10px 14px; border-radius: var(--radius); font-size: 0.82rem; }
+        .lookup-result.found { background: var(--green-light); color: #155724; border: 1px solid #a3d9b1; }
+        .lookup-result.not-found { background: var(--gray-50); color: var(--gray-500); border: 1px solid var(--gray-200); }
+        .lookup-result.error { background: var(--red-light); color: var(--red); border: 1px solid #fca5a5; }
+
+        /* Dynamic list */
+        .dynamic-list { margin-bottom: 14px; }
+        .dynamic-list-item { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+        .dynamic-list-item .form-input { flex: 1; }
+        .btn-remove-item { width: 32px; height: 36px; border: 1px solid var(--gray-300); border-radius: var(--radius); background: var(--white); color: var(--red); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        .btn-remove-item:hover { background: var(--red-light); border-color: var(--red); }
+        .btn-add-item { padding: 6px 14px; border: 1px dashed var(--gray-300); border-radius: var(--radius); background: var(--white); color: var(--gray-500); font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .btn-add-item:hover { border-color: var(--navy); color: var(--navy); background: var(--gray-50); }
+
+        /* Accordion */
+        .accordion { margin-bottom: 14px; }
+        .accordion-item { border: 1px solid var(--gray-200); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
+        .accordion-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--gray-50); cursor: pointer; transition: background 0.2s; user-select: none; }
+        .accordion-header:hover { background: var(--gray-100); }
+        .accordion-title { font-size: 0.88rem; font-weight: 600; color: var(--navy); flex: 1; }
+        .accordion-chevron { font-size: 0.75rem; color: var(--gray-400); transition: transform 0.2s; }
+        .accordion-item.open .accordion-chevron { transform: rotate(180deg); }
+        .accordion-actions { display: flex; gap: 8px; margin-left: 8px; }
+        .btn-remove-term { padding: 2px 8px; border: 1px solid var(--gray-300); border-radius: 4px; background: var(--white); color: var(--red); font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
+        .btn-remove-term:hover { background: var(--red-light); border-color: var(--red); }
+        .accordion-body { display: none; padding: 16px; border-top: 1px solid var(--gray-200); }
+        .accordion-item.open .accordion-body { display: block; }
+
+        /* Fee summary */
+        .fee-summary { background: linear-gradient(135deg, var(--navy), var(--navy-dark)); border-radius: var(--radius-lg); padding: 20px 24px; color: var(--white); margin-bottom: 20px; }
+        .fee-summary .fee-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.88rem; }
+        .fee-summary .fee-row.sub { color: rgba(255,255,255,0.5); font-size: 0.82rem; }
+        .fee-summary .fee-row.total { border-top: 1px solid rgba(255,255,255,0.15); padding-top: 12px; margin-top: 8px; font-weight: 700; font-size: 1.1rem; }
+        .fee-summary .fee-row .neg { color: #86efac; }
+
+        /* Buttons */
+        .btn-generate { display: block; width: 100%; padding: 16px 24px; background: var(--navy); color: var(--white); border: none; border-radius: 52px; font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.3s; }
+        .btn-generate:hover:not(:disabled) { background: var(--gold); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-nav { padding: 12px 28px; border: none; border-radius: 52px; font-size: 0.9rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.3s; }
+        .btn-next { background: var(--navy); color: var(--white); }
+        .btn-next:hover { background: var(--gold); transform: translateY(-1px); }
+        .btn-back { background: var(--white); color: var(--gray-600); border: 1px solid var(--gray-300); }
+        .btn-back:hover { background: var(--gray-50); border-color: var(--navy); color: var(--navy); }
+        .wizard-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .wizard-nav-right { margin-left: auto; }
+
+        .btn-preview { display: block; width: 100%; padding: 14px 24px; background: var(--white); color: var(--navy); border: 2px solid var(--navy); border-radius: 52px; font-size: 0.9rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.3s; margin-bottom: 20px; }
+        .btn-preview:hover { background: var(--navy); color: var(--white); }
+
+        /* Preview */
+        .preview-frame { border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 20px; }
+        .preview-frame iframe { width: 100%; border: none; min-height: 400px; }
+        .preview-placeholder { padding: 40px; text-align: center; color: var(--gray-400); font-size: 0.9rem; }
+
+        /* Link result */
+        .link-result { display: none; background: var(--green-light); border: 1px solid #a3d9b1; border-radius: var(--radius-lg); padding: 20px 24px; margin-top: 20px; }
+        .link-result h3 { font-family: var(--font-heading); color: #155724; font-size: 1rem; margin-bottom: 10px; }
+        .link-box { display: flex; gap: 8px; }
+        .link-box input { flex: 1; padding: 10px 12px; border: 1px solid #a3d9b1; border-radius: var(--radius); font-size: 0.82rem; font-family: monospace; color: var(--gray-700); background: var(--white); }
+        .btn-copy { padding: 10px 16px; background: var(--navy); color: var(--white); border: none; border-radius: var(--radius); font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background 0.2s; }
+        .btn-copy:hover { background: var(--gold); }
+        .btn-copy.copied { background: var(--green); }
+
+        /* Session search / results */
+        .session-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+        .session-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .session-name { font-weight: 600; color: var(--gray-700); font-size: 0.95rem; }
+        .session-badges { display: flex; gap: 6px; }
+        .badge { font-size: 0.68rem; padding: 2px 8px; border-radius: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .badge.signed { background: var(--blue-light); color: var(--blue); }
+        .badge.paid { background: var(--green-light); color: var(--green); }
+        .badge.unpaid { background: var(--red-light); color: var(--red); }
+        .badge.staff { background: #fef3c7; color: #92400e; }
+        .session-detail { font-size: 0.82rem; color: var(--gray-500); line-height: 1.7; }
+        .session-detail strong { color: var(--gray-700); }
+        .session-link { display: inline-block; margin-top: 8px; font-size: 0.78rem; color: var(--gold); font-weight: 600; cursor: pointer; }
+
+        /* Loading spinner */
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: var(--white); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Wizard section visibility */
+        .wizard-section { display: none; }
+        .wizard-section.active { display: block; }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .form-row.three { grid-template-columns: 1fr; }
+            .progress-bar { flex-wrap: wrap; gap: 4px; }
+            .step-line { width: 20px; margin: 0 4px; }
+            .step-label { font-size: 0.68rem; }
+            .radio-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-left">
+                <a href="/intake/staff/" class="header-brand">Jaskot Law</a>
+                <span class="header-badge">Staff Portal</span>
+            </div>
+            <a href="/intake/staff/logout" class="btn-logout">Log Out</a>
+        </div>
+    </header>
+
+    <div class="main">
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-tab="generate">Build Retainer</div>
+            <div class="tab" data-tab="lookup">Lookup Session</div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- Tab 1: Build Retainer (Multi-Step Wizard)                        -->
+        <!-- ================================================================ -->
+        <div class="tab-content active" id="tab-generate">
+
+            <!-- Progress Bar -->
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-step active" data-step="1">
+                    <span class="step-circle"><span class="step-num">1</span></span>
+                    <span class="step-label">Contact</span>
+                </div>
+                <div class="step-line" id="line-1-2"></div>
+                <div class="progress-step" data-step="2">
+                    <span class="step-circle"><span class="step-num">2</span></span>
+                    <span class="step-label">Case &amp; Fees</span>
+                </div>
+                <div class="step-line" id="line-2-3"></div>
+                <div class="progress-step" data-step="3">
+                    <span class="step-circle"><span class="step-num">3</span></span>
+                    <span class="step-label">Content</span>
+                </div>
+                <div class="step-line" id="line-3-4"></div>
+                <div class="progress-step" data-step="4">
+                    <span class="step-circle"><span class="step-num">4</span></span>
+                    <span class="step-label">Generate</span>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECTION 1: Contact Lookup                                     -->
+            <!-- ============================================================ -->
+            <div class="wizard-section active" id="wizard-1">
+
+                <!-- GHL Contact Lookup -->
+                <div class="card">
+                    <div class="card-title">GHL Contact Lookup</div>
+                    <div class="card-subtitle">Search by email or phone to auto-fill client info</div>
+                    <div class="lookup-row">
+                        <input class="form-input" type="text" id="lookupQuery" placeholder="Email or phone number">
+                        <button class="btn-lookup" id="btnLookup">Look Up</button>
+                    </div>
+                    <div id="lookupResult"></div>
+                </div>
+
+                <!-- Clio Lookup -->
+                <div class="card">
+                    <div class="card-title">Clio Matter Lookup</div>
+                    <div class="card-subtitle">Search by Clio matter number to auto-fill client info</div>
+                    <div class="lookup-row">
+                        <input class="form-input" type="text" id="clioLookupQuery" placeholder="e.g. 03742">
+                        <button class="btn-lookup" id="btnClioLookup">Look Up</button>
+                    </div>
+                    <div id="clioLookupResult"></div>
+                </div>
+
+                <!-- Client Information -->
+                <div class="card">
+                    <div class="card-title">Client Information</div>
+                    <div class="form-group">
+                        <label class="form-label" for="clientName">Full Name *</label>
+                        <input class="form-input" type="text" id="clientName" placeholder="Client full name">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="clientEmail">Email</label>
+                            <input class="form-input" type="email" id="clientEmail" placeholder="client@email.com">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="clientPhone">Phone</label>
+                            <input class="form-input" type="tel" id="clientPhone" placeholder="(xxx) xxx-xxxx">
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top: 14px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="clientLang">Language</label>
+                            <select class="form-select" id="clientLang">
+                                <option value="en">English</option>
+                                <option value="es">Spanish</option>
+                            </select>
+                        </div>
+                        <div></div>
+                    </div>
+                </div>
+
+                <div class="wizard-nav">
+                    <div></div>
+                    <button class="btn-nav btn-next" onclick="goToStep(2)">Next</button>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECTION 2: Case Type & Fee Structure                          -->
+            <!-- ============================================================ -->
+            <div class="wizard-section" id="wizard-2">
+
+                <!-- Case Type -->
+                <div class="card">
+                    <div class="card-title">Case Type</div>
+                    <div class="form-group">
+                        <select class="form-select" id="caseType">
+                            {% for key, label in case_type_choices %}
+                            <option value="{{ key }}" data-fee="{{ fee_map[key] }}">{{ label }} (${{ '{:,}'.format(fee_map[key]) }})</option>
+                            {% endfor %}
+                            <option value="custom">Custom...</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="customCaseTypeGroup" style="display: none;">
+                        <label class="form-label" for="customCaseTypeName">Custom Case Type Name</label>
+                        <input class="form-input" type="text" id="customCaseTypeName" placeholder="e.g. U-Visa with Waiver">
+                    </div>
+                </div>
+
+                <!-- Fee Type -->
+                <div class="card">
+                    <div class="card-title">Fee Type</div>
+                    <div class="radio-group" id="feeTypeGroup">
+                        <div class="radio-option">
+                            <input type="radio" name="feeType" id="feeType-hourly" value="hourly" checked>
+                            <label for="feeType-hourly">Hourly (Trust)</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="feeType" id="feeType-flat" value="flat">
+                            <label for="feeType-flat">Flat Fee</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="feeType" id="feeType-hybrid" value="hybrid">
+                            <label for="feeType-hybrid">Hybrid</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="feeType" id="feeType-contingency" value="contingency">
+                            <label for="feeType-contingency">Contingency</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Terms -->
+                <div class="card">
+                    <div class="card-title">Financial Terms</div>
+
+                    <!-- Hourly / default fields -->
+                    <div id="hourlyFields">
+                        <div class="form-row three">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="initialRetainer">Initial Retainer</label>
+                                <div class="input-addon">
+                                    <span class="prefix">$</span>
+                                    <input class="form-input" type="number" id="initialRetainer" min="0" step="100" value="3500">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="monthlyPayment">Monthly Payment</label>
+                                <div class="input-addon">
+                                    <span class="prefix">$</span>
+                                    <input class="form-input" type="number" id="monthlyPayment" min="0" step="50" value="750">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="trustMinimum">Trust Minimum</label>
+                                <div class="input-addon">
+                                    <span class="prefix">$</span>
+                                    <input class="form-input" type="number" id="trustMinimum" min="0" step="100" value="1000">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flat fee fields -->
+                    <div id="flatFields" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label" for="totalFlatFee">Total Fee</label>
+                            <div class="input-addon">
+                                <span class="prefix">$</span>
+                                <input class="form-input" type="number" id="totalFlatFee" min="0" step="100" value="3500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hybrid fields -->
+                    <div id="hybridFields" style="display: none;">
+                        <div class="form-row three">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="hybridFlat">Flat Portion</label>
+                                <div class="input-addon">
+                                    <span class="prefix">$</span>
+                                    <input class="form-input" type="number" id="hybridFlat" min="0" step="100" value="2000">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="hybridMonthly">Monthly Payment</label>
+                                <div class="input-addon">
+                                    <span class="prefix">$</span>
+                                    <input class="form-input" type="number" id="hybridMonthly" min="0" step="50" value="500">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="hybridTrustMin">Trust Minimum</label>
+                                <div class="input-addon">
+                                    <span class="prefix">$</span>
+                                    <input class="form-input" type="number" id="hybridTrustMin" min="0" step="100" value="500">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contingency fields -->
+                    <div id="contingencyFields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="preLitPercent">Pre-Litigation %</label>
+                                <div class="input-addon">
+                                    <span class="prefix">%</span>
+                                    <input class="form-input" type="number" id="preLitPercent" min="0" max="100" step="0.01" value="33.33">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="postLitPercent">Post-Litigation %</label>
+                                <div class="input-addon">
+                                    <span class="prefix">%</span>
+                                    <input class="form-input" type="number" id="postLitPercent" min="0" max="100" step="0.01" value="40">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="margin-top: 14px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="signingAttorney">Signing Attorney</label>
+                            <input class="form-input" type="text" id="signingAttorney" value="Jared Jaskot">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="clientSignatory">Client Signatory Name</label>
+                            <input class="form-input" type="text" id="clientSignatory" placeholder="Auto-filled from client name">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Adjustments -->
+                <div class="card">
+                    <div class="card-title">Pricing Adjustments</div>
+                    <div class="form-row">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="surcharge">Difficulty Surcharge</label>
+                            <div class="input-addon">
+                                <span class="prefix">$</span>
+                                <input class="form-input" type="number" id="surcharge" min="0" step="100" placeholder="0" value="">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="discount">Discount</label>
+                            <div class="input-addon">
+                                <span class="prefix">$</span>
+                                <input class="form-input" type="number" id="discount" min="0" step="100" placeholder="0" value="">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Office Payment -->
+                <div class="card">
+                    <div class="card-title">Office Payment (Optional)</div>
+                    <div class="card-subtitle">Amount already collected in person</div>
+                    <div class="form-row three">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="officeAmount">Amount Received</label>
+                            <div class="input-addon">
+                                <span class="prefix">$</span>
+                                <input class="form-input" type="number" id="officeAmount" min="0" step="100" placeholder="0" value="">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="officeMethod">Method</label>
+                            <select class="form-select" id="officeMethod">
+                                <option value="">None</option>
+                                <option value="cash">Cash</option>
+                                <option value="check">Check</option>
+                                <option value="escrow">Escrow Transfer</option>
+                                <option value="cash+check">Cash + Check</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="officeNote">Note</label>
+                            <input class="form-input" type="text" id="officeNote" placeholder="e.g., Transfer from matter 02597">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wizard-nav">
+                    <button class="btn-nav btn-back" onclick="goToStep(1)">Back</button>
+                    <button class="btn-nav btn-next" onclick="goToStep(3)">Next</button>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECTION 3: Retainer Content Editor                            -->
+            <!-- ============================================================ -->
+            <div class="wizard-section" id="wizard-3">
+
+                <!-- Scope -->
+                <div class="card">
+                    <div class="card-title">Scope of Representation</div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <textarea class="form-textarea" id="scopeText" rows="4" placeholder="Describe the scope of legal representation..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Includes -->
+                <div class="card">
+                    <div class="card-title">What's Included</div>
+                    <div class="dynamic-list" id="includesList"></div>
+                    <button class="btn-add-item" onclick="addListItem('includesList', '')">+ Add item</button>
+                </div>
+
+                <!-- Excludes -->
+                <div class="card">
+                    <div class="card-title">What's Not Included</div>
+                    <div class="dynamic-list" id="excludesList"></div>
+                    <button class="btn-add-item" onclick="addListItem('excludesList', '')">+ Add item</button>
+                </div>
+
+                <!-- Fee Note -->
+                <div class="card">
+                    <div class="card-title">Fee Note</div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <textarea class="form-textarea" id="feeNote" rows="4" placeholder="Fee note text shown on retainer..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Attorney Note -->
+                <div class="card">
+                    <div class="card-title">Attorney Note (Optional)</div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <textarea class="form-textarea" id="attorneyNote" rows="3" placeholder="Custom note shown on retainer agreement"></textarea>
+                    </div>
+                </div>
+
+                <!-- Terms -->
+                <div class="card">
+                    <div class="card-title">Terms &amp; Conditions</div>
+                    <div class="card-subtitle">Click a heading to expand/collapse. Standard terms cannot be removed.</div>
+                    <div class="accordion" id="termsAccordion"></div>
+                    <button class="btn-add-item" onclick="addCustomTerm()">+ Add Term</button>
+                </div>
+
+                <div class="wizard-nav">
+                    <button class="btn-nav btn-back" onclick="goToStep(2)">Back</button>
+                    <button class="btn-nav btn-next" onclick="goToStep(4)">Next</button>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECTION 4: Preview & Generate                                 -->
+            <!-- ============================================================ -->
+            <div class="wizard-section" id="wizard-4">
+
+                <!-- Language toggle on preview page -->
+                <div class="form-row" style="margin-bottom: 14px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="retainerLang">Retainer Language</label>
+                        <select class="form-select" id="retainerLang">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                        </select>
+                    </div>
+                    <div></div>
+                </div>
+
+                <!-- Preview -->
+                <button class="btn-preview" id="btnPreview">Preview Retainer</button>
+                <div class="preview-frame" id="previewFrame">
+                    <div class="preview-placeholder" id="previewPlaceholder">Click "Preview Retainer" to see what the client will receive.</div>
+                </div>
+
+                <!-- Fee Summary -->
+                <div class="fee-summary" id="feeSummary">
+                    <div class="fee-row"><span>Base Fee</span><span id="feeBase">$3,500</span></div>
+                    <div class="fee-row sub" id="rowSurcharge" style="display: none;"><span>+ Surcharge</span><span id="feeSurcharge">$0</span></div>
+                    <div class="fee-row sub" id="rowDiscount" style="display: none;"><span>- Discount</span><span class="neg" id="feeDiscount">$0</span></div>
+                    <div class="fee-row sub" id="rowOffice" style="display: none;"><span>- Office Payment</span><span class="neg" id="feeOffice">$0</span></div>
+                    <div class="fee-row total"><span>Client Pays on Card</span><span id="feeTotal">$3,500</span></div>
+                </div>
+
+                <!-- Generate Button -->
+                <button class="btn-generate" id="btnGenerate" disabled>Generate Magic Link</button>
+
+                <!-- Link Result -->
+                <div class="link-result" id="linkResult">
+                    <h3>Magic Link Generated</h3>
+                    <div class="link-box">
+                        <input type="text" id="linkOutput" readonly>
+                        <button class="btn-copy" id="btnCopy">Copy</button>
+                    </div>
+                </div>
+
+                <div class="wizard-nav" style="margin-top: 20px;">
+                    <button class="btn-nav btn-back" onclick="goToStep(3)">Back</button>
+                    <div></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- Tab 2: Lookup Session                                             -->
+        <!-- ================================================================ -->
+        <div class="tab-content" id="tab-lookup">
+            <div class="card">
+                <div class="card-title">Search Sessions</div>
+                <div class="lookup-row">
+                    <input class="form-input" type="text" id="sessionQuery" placeholder="Token, name, email, or phone">
+                    <button class="btn-lookup" id="btnSearchSession">Search</button>
+                </div>
+            </div>
+            <div id="sessionResults"></div>
+        </div>
+    </div>
+
+    <script>
+    // =========================================================================
+    // GLOBALS
+    // =========================================================================
+    var currentStep = 1;
+    var loadedDefaults = null;  // cache of the last fetched defaults
+    var customTermCounter = 0;
+
+    // =========================================================================
+    // TABS
+    // =========================================================================
+    document.querySelectorAll('.tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+            tab.classList.add('active');
+            document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    // =========================================================================
+    // WIZARD NAVIGATION
+    // =========================================================================
+    function goToStep(step) {
+        // Hide all sections
+        document.querySelectorAll('.wizard-section').forEach(function(s) { s.classList.remove('active'); });
+        document.getElementById('wizard-' + step).classList.add('active');
+
+        // Update progress bar
+        document.querySelectorAll('.progress-step').forEach(function(ps) {
+            var s = parseInt(ps.dataset.step);
+            ps.classList.remove('active', 'completed');
+            if (s === step) ps.classList.add('active');
+            else if (s < step) ps.classList.add('completed');
+        });
+
+        // Update step lines
+        for (var i = 1; i <= 3; i++) {
+            var line = document.getElementById('line-' + i + '-' + (i + 1));
+            if (line) {
+                if (i < step) line.classList.add('completed');
+                else line.classList.remove('completed');
+            }
+        }
+
+        currentStep = step;
+
+        // Auto-fill client signatory from client name when entering step 2
+        if (step === 2) {
+            var cs = document.getElementById('clientSignatory');
+            if (!cs.value.trim()) {
+                cs.value = document.getElementById('clientName').value.trim();
+            }
+        }
+
+        // Sync retainer language dropdown when entering step 4
+        if (step === 4) {
+            document.getElementById('retainerLang').value = document.getElementById('clientLang').value;
+        }
+
+        // Update fee summary when entering step 4
+        if (step === 4) {
+            updateFeeSummary();
+            checkGenerateReady();
+        }
+
+        // Scroll to top of wizard
+        window.scrollTo({ top: document.querySelector('.progress-bar').offsetTop - 80, behavior: 'smooth' });
+    }
+
+    // =========================================================================
+    // FEE TYPE SWITCHING
+    // =========================================================================
+    function getSelectedFeeType() {
+        var checked = document.querySelector('input[name="feeType"]:checked');
+        return checked ? checked.value : 'hourly';
+    }
+
+    function updateFeeTypeFields() {
+        var feeType = getSelectedFeeType();
+
+        document.getElementById('hourlyFields').style.display = feeType === 'hourly' ? 'block' : 'none';
+        document.getElementById('flatFields').style.display = feeType === 'flat' ? 'block' : 'none';
+        document.getElementById('hybridFields').style.display = feeType === 'hybrid' ? 'block' : 'none';
+        document.getElementById('contingencyFields').style.display = feeType === 'contingency' ? 'block' : 'none';
+    }
+
+    document.querySelectorAll('input[name="feeType"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            updateFeeTypeFields();
+            contentEdited = false;  // fee type change resets content
+            fetchDefaults(true);
+        });
+    });
+
+    // =========================================================================
+    // CASE TYPE CHANGE
+    // =========================================================================
+    document.getElementById('caseType').addEventListener('change', function() {
+        var val = this.value;
+        document.getElementById('customCaseTypeGroup').style.display = val === 'custom' ? 'block' : 'none';
+
+        // Set default fee type based on case type
+        if (val === 'personal_injury') {
+            document.getElementById('feeType-contingency').checked = true;
+        } else if (val !== 'custom') {
+            document.getElementById('feeType-hourly').checked = true;
+        }
+        updateFeeTypeFields();
+        contentEdited = false;  // case type change resets content
+        fetchDefaults(true);
+    });
+
+    // =========================================================================
+    // FETCH DEFAULTS FROM SERVER
+    // =========================================================================
+    // Track whether defaults have been loaded at least once
+    var defaultsLoaded = false;
+
+    function clearContentFields() {
+        // For custom case types, fetch "other" defaults to get standard
+        // excludes and terms, but leave scope/includes blank
+        var feeType = getSelectedFeeType();
+        var lang = document.getElementById('clientLang').value;
+        fetch('/intake/staff/api/case-defaults/other?fee_type=' + feeType + '&lang=' + lang)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.error) return;
+                // Clear scope and includes (custom = staff writes their own)
+                document.getElementById('scopeText').value = '';
+                rebuildDynamicList('includesList', []);
+                // Zero out fees
+                document.getElementById('initialRetainer').value = '0';
+                document.getElementById('monthlyPayment').value = '0';
+                document.getElementById('trustMinimum').value = '0';
+                document.getElementById('totalFlatFee').value = '0';
+                document.getElementById('hybridFlat').value = '0';
+                document.getElementById('hybridMonthly').value = '0';
+                document.getElementById('hybridTrustMin').value = '0';
+                document.getElementById('feeNote').value = data.fees && data.fees.note ? data.fees.note : '';
+                // Keep standard excludes and terms
+                if (data.fees && data.fees.excludes) rebuildDynamicList('excludesList', data.fees.excludes);
+                if (data.terms) rebuildTermsAccordion(data.terms, false);
+                loadedDefaults = data;
+                defaultsLoaded = true;
+            })
+            .catch(function(e) {
+                console.log('Failed to fetch custom defaults:', e);
+            });
+    }
+
+    function fetchDefaults(forceOverwrite) {
+        var caseType = document.getElementById('caseType').value;
+        if (caseType === 'custom') {
+            if (forceOverwrite) clearContentFields();
+            return;
+        }
+
+        var feeType = getSelectedFeeType();
+        var lang = document.getElementById('clientLang').value;
+
+        fetch('/intake/staff/api/case-defaults/' + caseType + '?fee_type=' + feeType + '&lang=' + lang)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.error) return;
+                loadedDefaults = data;
+                // Only overwrite content fields if explicitly forced
+                // (case type change, fee type change, or first page load)
+                if (forceOverwrite) {
+                    populateFromDefaults(data);
+                    defaultsLoaded = true;
+                }
+            })
+            .catch(function(e) {
+                console.log('Failed to fetch defaults:', e);
+            });
+    }
+
+    function populateFromDefaults(data) {
+        // Scope
+        if (data.scope && data.scope.text) {
+            document.getElementById('scopeText').value = data.scope.text;
+        }
+
+        // Fee amounts
+        if (data.fees) {
+            var fees = data.fees;
+            var feeType = getSelectedFeeType();
+
+            if (feeType === 'hourly' && fees.initial) {
+                document.getElementById('initialRetainer').value = fees.initial.amount || 0;
+                document.getElementById('monthlyPayment').value = fees.monthly ? fees.monthly.amount : 0;
+                document.getElementById('trustMinimum').value = fees.min_trust ? fees.min_trust.amount : 0;
+            } else if (feeType === 'flat' && fees.initial) {
+                document.getElementById('totalFlatFee').value = fees.initial.amount || 0;
+            } else if (feeType === 'hybrid' && fees.initial) {
+                document.getElementById('hybridFlat').value = fees.initial.amount || 0;
+                document.getElementById('hybridMonthly').value = fees.monthly ? fees.monthly.amount : 0;
+                document.getElementById('hybridTrustMin').value = fees.min_trust ? fees.min_trust.amount : 0;
+            }
+
+            // Includes
+            if (fees.includes) {
+                rebuildDynamicList('includesList', fees.includes);
+            }
+
+            // Excludes
+            if (fees.excludes) {
+                rebuildDynamicList('excludesList', fees.excludes);
+            }
+
+            // Fee note
+            if (fees.note) {
+                document.getElementById('feeNote').value = fees.note;
+            }
+        }
+
+        // Terms
+        if (data.terms) {
+            rebuildTermsAccordion(data.terms, false);
+        }
+    }
+
+    // Language change does NOT overwrite content — user's edits are preserved
+    // Sync both language dropdowns
+    document.getElementById('clientLang').addEventListener('change', function() {
+        document.getElementById('retainerLang').value = this.value;
+        fetchDefaults(false);
+    });
+    document.getElementById('retainerLang').addEventListener('change', function() {
+        document.getElementById('clientLang').value = this.value;
+        generateFeeNote();
+        // Re-fetch defaults to get terms and excludes in the new language
+        var caseType = document.getElementById('caseType').value;
+        var lookupType = caseType === 'custom' ? 'other' : caseType;
+        var feeType = getSelectedFeeType();
+        fetch('/intake/staff/api/case-defaults/' + lookupType + '?fee_type=' + feeType + '&lang=' + this.value)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.error) return;
+                if (data.terms) rebuildTermsAccordion(data.terms, false);
+                if (data.fees && data.fees.excludes) rebuildDynamicList('excludesList', data.fees.excludes);
+            })
+            .catch(function(e) { console.log('Failed to fetch lang defaults:', e); });
+    });
+
+    // Mark content as edited when user touches content fields
+    ['scopeText', 'feeNote', 'attorneyNote'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('input', function() { contentEdited = true; });
+    });
+
+    // =========================================================================
+    // AUTO-GENERATE FEE NOTE from current fee inputs
+    // =========================================================================
+    var HOURLY_RATES_EN = '$350/hr (Attorney), $150/hr (Paralegal)';
+    var HOURLY_RATES_ES = '$350/hr (Abogado), $150/hr (Paralegal)';
+
+    function fmtDollars(n) {
+        return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+    }
+
+    function generateFeeNote() {
+        var feeType = getSelectedFeeType();
+        var lang = document.getElementById('clientLang').value;
+        var note = '';
+
+        if (feeType === 'hourly') {
+            var initial = parseFloat(document.getElementById('initialRetainer').value) || 0;
+            var monthly = parseFloat(document.getElementById('monthlyPayment').value) || 0;
+            var trust = parseFloat(document.getElementById('trustMinimum').value) || 0;
+            if (lang === 'es') {
+                note = 'El honorario inicial de retención de ' + fmtDollars(initial) + ' se debe pagar al momento de firmar. La reposición mensual del fideicomiso de ' + fmtDollars(monthly) + ' es necesaria para mantener un saldo mínimo de ' + fmtDollars(trust) + ' en la Cuenta Fiduciaria de Abogado. El trabajo se factura según las tarifas por hora estándar de la Firma (' + HOURLY_RATES_ES + ') en incrementos de 6 minutos.';
+            } else {
+                note = 'The initial retainer of ' + fmtDollars(initial) + ' is due upon signing. Monthly trust replenishment of ' + fmtDollars(monthly) + ' is required to maintain a minimum balance of ' + fmtDollars(trust) + ' in the Attorney Trust Account. Work is billed at the Firm\'s standard hourly rates (' + HOURLY_RATES_EN + ') in 6-minute increments.';
+            }
+        } else if (feeType === 'flat') {
+            var total = parseFloat(document.getElementById('totalFlatFee').value) || 0;
+            if (lang === 'es') {
+                note = 'El honorario total de ' + fmtDollars(total) + ' se debe pagar al momento de firmar. Este honorario cubre todos los servicios descritos en el Alcance de la Representación anterior. No se incurrirán cargos adicionales por hora por los servicios enumerados.';
+            } else {
+                note = 'The total fee of ' + fmtDollars(total) + ' is due upon signing. This fee covers all services described in the Scope of Representation above. No additional hourly charges will be incurred for the listed services.';
+            }
+        } else if (feeType === 'hybrid') {
+            var flat = parseFloat(document.getElementById('hybridFlat').value) || 0;
+            var hMonthly = parseFloat(document.getElementById('hybridMonthly').value) || 0;
+            var hTrust = parseFloat(document.getElementById('hybridTrustMin').value) || 0;
+            if (lang === 'es') {
+                note = 'Un honorario fijo de ' + fmtDollars(flat) + ' cubre los servicios principales enumerados a continuación. El trabajo adicional más allá del alcance definido se facturará según las tarifas por hora estándar de la Firma (' + HOURLY_RATES_ES + ') en incrementos de 6 minutos contra la cuenta fiduciaria. La reposición mensual del fideicomiso de ' + fmtDollars(hMonthly) + ' es necesaria para mantener un saldo mínimo de ' + fmtDollars(hTrust) + ' en la Cuenta Fiduciaria de Abogado.';
+            } else {
+                note = 'A flat fee of ' + fmtDollars(flat) + ' covers the core services listed below. Additional work beyond the defined scope will be billed at the Firm\'s standard hourly rates (' + HOURLY_RATES_EN + ') in 6-minute increments against the trust account. Monthly trust replenishment of ' + fmtDollars(hMonthly) + ' is required to maintain a minimum balance of ' + fmtDollars(hTrust) + ' in the Attorney Trust Account.';
+            }
+        } else if (feeType === 'contingency') {
+            var pre = parseFloat(document.getElementById('preLitPercent').value) || 33.33;
+            var post = parseFloat(document.getElementById('postLitPercent').value) || 40;
+            if (lang === 'es') {
+                note = 'No se requiere pago por adelantado. Los honorarios del abogado son ' + pre + '% de la recuperación bruta antes de presentar una demanda y ' + post + '% después de presentar una demanda. Los gastos del caso se deducen de la recuperación.';
+            } else {
+                note = 'No upfront payment is required. Attorney fees are ' + pre + '% of the gross recovery before filing a lawsuit and ' + post + '% after filing a lawsuit. Case expenses are deducted from recovery.';
+            }
+        }
+
+        document.getElementById('feeNote').value = note;
+    }
+
+    // Auto-regenerate fee note when fee amount inputs change
+    ['initialRetainer', 'monthlyPayment', 'trustMinimum', 'totalFlatFee',
+     'hybridFlat', 'hybridMonthly', 'hybridTrustMin', 'preLitPercent', 'postLitPercent'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('change', generateFeeNote);
+    });
+
+    // =========================================================================
+    // DYNAMIC LISTS (includes/excludes)
+    // =========================================================================
+    function addListItem(listId, value) {
+        var container = document.getElementById(listId);
+        var div = document.createElement('div');
+        div.className = 'dynamic-list-item';
+        div.innerHTML = '<input class="form-input" type="text" value="' + escapeHtml(value) + '" placeholder="Enter item...">' +
+            '<button class="btn-remove-item" onclick="this.parentElement.remove(); contentEdited = true;" title="Remove">&times;</button>';
+        container.appendChild(div);
+        // Mark edited when user types in a list item
+        div.querySelector('input').addEventListener('input', function() { contentEdited = true; });
+    }
+
+    function getListItems(listId) {
+        var items = [];
+        document.querySelectorAll('#' + listId + ' .dynamic-list-item input').forEach(function(input) {
+            var val = input.value.trim();
+            if (val) items.push(val);
+        });
+        return items;
+    }
+
+    function rebuildDynamicList(listId, items) {
+        var container = document.getElementById(listId);
+        container.innerHTML = '';
+        items.forEach(function(item) {
+            addListItem(listId, item);
+        });
+    }
+
+    // =========================================================================
+    // TERMS ACCORDION
+    // =========================================================================
+    function rebuildTermsAccordion(terms, keepExisting) {
+        var accordion = document.getElementById('termsAccordion');
+
+        // If keepExisting, collect custom terms first
+        var customTerms = [];
+        if (keepExisting) {
+            accordion.querySelectorAll('.accordion-item[data-custom="true"]').forEach(function(item) {
+                customTerms.push({
+                    heading: item.querySelector('.accordion-title').textContent,
+                    text: item.querySelector('.accordion-body textarea').value,
+                });
+            });
+        }
+
+        accordion.innerHTML = '';
+
+        // Add standard terms
+        terms.forEach(function(term, idx) {
+            addTermToAccordion(term, false, idx);
+        });
+
+        // Re-add custom terms
+        customTerms.forEach(function(term) {
+            addTermToAccordion(term, true, -1);
+        });
+    }
+
+    function addTermToAccordion(term, isCustom, idx) {
+        var accordion = document.getElementById('termsAccordion');
+        var item = document.createElement('div');
+        item.className = 'accordion-item';
+        item.dataset.custom = isCustom ? 'true' : 'false';
+        if (isCustom) {
+            customTermCounter++;
+            item.dataset.customId = customTermCounter;
+        }
+
+        var actionsHtml = '';
+        if (isCustom) {
+            actionsHtml = '<div class="accordion-actions"><button class="btn-remove-term" onclick="event.stopPropagation(); this.closest(\'.accordion-item\').remove();">Remove</button></div>';
+        }
+
+        item.innerHTML =
+            '<div class="accordion-header" onclick="this.parentElement.classList.toggle(\'open\')">' +
+                '<span class="accordion-title">' + escapeHtml(term.heading || 'New Term') + '</span>' +
+                actionsHtml +
+                '<span class="accordion-chevron">&#9660;</span>' +
+            '</div>' +
+            '<div class="accordion-body">' +
+                (isCustom ? '<div class="form-group"><label class="form-label">Heading</label><input class="form-input term-heading-input" type="text" value="' + escapeHtml(term.heading || '') + '" onchange="updateTermHeading(this)"></div>' : '') +
+                '<div class="form-group"><label class="form-label">Text</label><textarea class="form-textarea term-text" rows="4">' + escapeHtml(term.text || '') + '</textarea></div>' +
+                (term.items ? '<div class="form-group"><label class="form-label">Items</label><textarea class="form-textarea term-items" rows="' + Math.max(3, term.items.length) + '" placeholder="One item per line">' + escapeHtml((term.items || []).join('\n')) + '</textarea></div>' : '') +
+                (term.text_after ? '<div class="form-group"><label class="form-label">Text After Items</label><textarea class="form-textarea term-text-after" rows="2">' + escapeHtml(term.text_after || '') + '</textarea></div>' : '') +
+            '</div>';
+
+        accordion.appendChild(item);
+    }
+
+    function addCustomTerm() {
+        addTermToAccordion({ heading: 'New Term', text: '' }, true, -1);
+        // Auto-open the new term
+        var items = document.querySelectorAll('#termsAccordion .accordion-item');
+        var last = items[items.length - 1];
+        if (last) last.classList.add('open');
+    }
+
+    function updateTermHeading(input) {
+        var item = input.closest('.accordion-item');
+        var title = item.querySelector('.accordion-title');
+        title.textContent = input.value || 'New Term';
+    }
+
+    function getTermsFromAccordion() {
+        var terms = [];
+        document.querySelectorAll('#termsAccordion .accordion-item').forEach(function(item) {
+            var heading = item.querySelector('.accordion-title').textContent;
+            var text = item.querySelector('.term-text') ? item.querySelector('.term-text').value : '';
+            var itemsTA = item.querySelector('.term-items');
+            var textAfterTA = item.querySelector('.term-text-after');
+
+            var term = { heading: heading, text: text };
+
+            if (itemsTA && itemsTA.value.trim()) {
+                term.items = itemsTA.value.trim().split('\n').filter(function(l) { return l.trim(); });
+            }
+            if (textAfterTA && textAfterTA.value.trim()) {
+                term.text_after = textAfterTA.value.trim();
+            }
+
+            terms.push(term);
+        });
+        return terms;
+    }
+
+    // =========================================================================
+    // FEE SUMMARY CALCULATION
+    // =========================================================================
+    function getBaseFee() {
+        var feeType = getSelectedFeeType();
+        if (feeType === 'hourly') return parseFloat(document.getElementById('initialRetainer').value) || 0;
+        if (feeType === 'flat') return parseFloat(document.getElementById('totalFlatFee').value) || 0;
+        if (feeType === 'hybrid') return parseFloat(document.getElementById('hybridFlat').value) || 0;
+        if (feeType === 'contingency') return 0;
+        return 0;
+    }
+
+    function updateFeeSummary() {
+        var base = getBaseFee();
+        var feeType = getSelectedFeeType();
+        var surcharge = parseFloat(document.getElementById('surcharge').value) || 0;
+        var discount = parseFloat(document.getElementById('discount').value) || 0;
+        var office = parseFloat(document.getElementById('officeAmount').value) || 0;
+
+        if (feeType === 'contingency') {
+            document.getElementById('feeBase').textContent = 'Contingency';
+        } else {
+            document.getElementById('feeBase').textContent = '$' + base.toLocaleString();
+        }
+
+        var rowSurcharge = document.getElementById('rowSurcharge');
+        var rowDiscount = document.getElementById('rowDiscount');
+        var rowOffice = document.getElementById('rowOffice');
+
+        rowSurcharge.style.display = surcharge > 0 ? 'flex' : 'none';
+        document.getElementById('feeSurcharge').textContent = '$' + surcharge.toLocaleString();
+
+        rowDiscount.style.display = discount > 0 ? 'flex' : 'none';
+        document.getElementById('feeDiscount').textContent = '$' + discount.toLocaleString();
+
+        rowOffice.style.display = office > 0 ? 'flex' : 'none';
+        document.getElementById('feeOffice').textContent = '$' + office.toLocaleString();
+
+        if (feeType === 'contingency') {
+            var pre = document.getElementById('preLitPercent').value || '33.33';
+            var post = document.getElementById('postLitPercent').value || '40';
+            document.getElementById('feeTotal').textContent = pre + '% / ' + post + '%';
+        } else {
+            var total = Math.max(base + surcharge - discount - office, 0);
+            document.getElementById('feeTotal').textContent = '$' + total.toLocaleString();
+        }
+    }
+
+    // =========================================================================
+    // GENERATE BUTTON STATE
+    // =========================================================================
+    function checkGenerateReady() {
+        var name = document.getElementById('clientName').value.trim();
+        document.getElementById('btnGenerate').disabled = !name;
+    }
+
+    // =========================================================================
+    // GHL LOOKUP
+    // =========================================================================
+    document.getElementById('btnLookup').addEventListener('click', async function() {
+        var query = document.getElementById('lookupQuery').value.trim();
+        if (!query) return;
+
+        var btn = document.getElementById('btnLookup');
+        btn.textContent = 'Looking up...';
+        btn.disabled = true;
+
+        var isEmail = query.includes('@');
+        var body = isEmail ? { email: query } : { phone: query };
+
+        try {
+            var res = await fetch('/intake/staff/api/lookup-contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            var data = await res.json();
+            var resultEl = document.getElementById('lookupResult');
+
+            if (data.found) {
+                resultEl.className = 'lookup-result found';
+                var tagText = data.tags && data.tags.length ? ' | Tags: ' + data.tags.join(', ') : '';
+                resultEl.textContent = 'Found: ' + data.name + ' (' + (data.email || data.phone) + ')' + tagText;
+                if (data.name) document.getElementById('clientName').value = data.name;
+                if (data.email) document.getElementById('clientEmail').value = data.email;
+                if (data.phone) document.getElementById('clientPhone').value = data.phone;
+                checkGenerateReady();
+            } else {
+                resultEl.className = 'lookup-result not-found';
+                resultEl.textContent = 'No contact found for "' + query + '"';
+            }
+        } catch (e) {
+            document.getElementById('lookupResult').className = 'lookup-result not-found';
+            document.getElementById('lookupResult').textContent = 'Lookup failed';
+        }
+
+        btn.textContent = 'Look Up';
+        btn.disabled = false;
+    });
+
+    // Allow Enter key in GHL lookup
+    document.getElementById('lookupQuery').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnLookup').click(); }
+    });
+
+    // =========================================================================
+    // CLIO LOOKUP
+    // =========================================================================
+    document.getElementById('btnClioLookup').addEventListener('click', async function() {
+        var query = document.getElementById('clioLookupQuery').value.trim();
+        if (!query) return;
+
+        var btn = document.getElementById('btnClioLookup');
+        btn.textContent = 'Looking up...';
+        btn.disabled = true;
+
+        try {
+            var res = await fetch('/intake/staff/api/lookup-clio', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query }),
+            });
+            var data = await res.json();
+            var resultEl = document.getElementById('clioLookupResult');
+
+            if (data.found) {
+                resultEl.className = 'lookup-result found';
+                resultEl.textContent = 'Found: Matter #' + data.matter_number + ' - ' + data.name + ' (' + (data.email || data.phone || 'no contact') + ')';
+                if (data.name) document.getElementById('clientName').value = data.name;
+                if (data.email) document.getElementById('clientEmail').value = data.email;
+                if (data.phone) document.getElementById('clientPhone').value = data.phone;
+                checkGenerateReady();
+            } else {
+                resultEl.className = 'lookup-result not-found';
+                resultEl.textContent = data.error || 'No matter found for "' + query + '"';
+            }
+        } catch (e) {
+            var resultEl = document.getElementById('clioLookupResult');
+            resultEl.className = 'lookup-result error';
+            resultEl.textContent = 'Clio lookup failed';
+        }
+
+        btn.textContent = 'Look Up';
+        btn.disabled = false;
+    });
+
+    // Allow Enter key in Clio lookup
+    document.getElementById('clioLookupQuery').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnClioLookup').click(); }
+    });
+
+    // =========================================================================
+    // PREVIEW
+    // =========================================================================
+    document.getElementById('btnPreview').addEventListener('click', async function() {
+        var btn = document.getElementById('btnPreview');
+        btn.textContent = 'Loading preview...';
+        btn.disabled = true;
+
+        var contentJson = buildRetainerContentJson();
+
+        try {
+            var res = await fetch('/intake/staff/api/preview-retainer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: contentJson, lang: document.getElementById('clientLang').value }),
+            });
+
+            var frameEl = document.getElementById('previewFrame');
+            var placeholder = document.getElementById('previewPlaceholder');
+
+            if (res.ok) {
+                var html = await res.text();
+                // Remove old iframe if any
+                var oldIframe = frameEl.querySelector('iframe');
+                if (oldIframe) oldIframe.remove();
+                if (placeholder) placeholder.style.display = 'none';
+
+                var iframe = document.createElement('iframe');
+                frameEl.appendChild(iframe);
+                iframe.contentDocument.open();
+                iframe.contentDocument.write(html);
+                iframe.contentDocument.close();
+                // Auto-resize iframe to fit content (no double scroll)
+                iframe.onload = function() {
+                    try { iframe.style.height = iframe.contentDocument.body.scrollHeight + 40 + 'px'; } catch(e) {}
+                };
+                // Also try immediately after write
+                setTimeout(function() {
+                    try { iframe.style.height = iframe.contentDocument.body.scrollHeight + 40 + 'px'; } catch(e) {}
+                }, 200);
+            } else {
+                if (placeholder) {
+                    placeholder.style.display = 'block';
+                    placeholder.textContent = 'Preview failed. Check console.';
+                }
+            }
+        } catch (e) {
+            console.error('Preview error:', e);
+        }
+
+        btn.textContent = 'Preview Retainer';
+        btn.disabled = false;
+    });
+
+    // =========================================================================
+    // BUILD retainer_content_json
+    // =========================================================================
+    function buildRetainerContentJson() {
+        var caseType = document.getElementById('caseType').value;
+        var feeType = getSelectedFeeType();
+        var lang = document.getElementById('clientLang').value;
+
+        // Build subtitle
+        var caseSelect = document.getElementById('caseType');
+        var subtitle = caseType === 'custom'
+            ? (document.getElementById('customCaseTypeName').value.trim() || 'Custom Case')
+            : caseSelect.selectedOptions[0].textContent.replace(/\s*\(\$[\d,]+\)\s*$/, '');
+
+        // Build fees section based on fee type
+        var feesObj = { heading: lang === 'es' ? 'Honorarios y Pago' : 'Fees and Payment' };
+
+        if (feeType === 'hourly') {
+            feesObj.initial = {
+                amount: parseFloat(document.getElementById('initialRetainer').value) || 0,
+                label: lang === 'es' ? 'Honorario Inicial de Retenci\u00f3n' : 'Initial Retainer Fee',
+            };
+            var monthly = parseFloat(document.getElementById('monthlyPayment').value) || 0;
+            if (monthly > 0) {
+                feesObj.monthly = {
+                    amount: monthly,
+                    label: lang === 'es' ? 'Reposici\u00f3n Mensual del Fideicomiso' : 'Monthly Trust Replenishment',
+                };
+            }
+            var trustMin = parseFloat(document.getElementById('trustMinimum').value) || 0;
+            if (trustMin > 0) {
+                feesObj.min_trust = {
+                    amount: trustMin,
+                    label: lang === 'es' ? 'Saldo M\u00ednimo del Fideicomiso' : 'Minimum Trust Balance',
+                };
+            }
+        } else if (feeType === 'flat') {
+            feesObj.initial = {
+                amount: parseFloat(document.getElementById('totalFlatFee').value) || 0,
+                label: lang === 'es' ? 'Tarifa Fija Total' : 'Total Flat Fee',
+            };
+        } else if (feeType === 'hybrid') {
+            feesObj.initial = {
+                amount: parseFloat(document.getElementById('hybridFlat').value) || 0,
+                label: lang === 'es' ? 'Porci\u00f3n Fija' : 'Flat Portion',
+            };
+            var hMonthly = parseFloat(document.getElementById('hybridMonthly').value) || 0;
+            if (hMonthly > 0) {
+                feesObj.monthly = {
+                    amount: hMonthly,
+                    label: lang === 'es' ? 'Pago Mensual' : 'Monthly Payment',
+                };
+            }
+            var hTrust = parseFloat(document.getElementById('hybridTrustMin').value) || 0;
+            if (hTrust > 0) {
+                feesObj.min_trust = {
+                    amount: hTrust,
+                    label: lang === 'es' ? 'Saldo M\u00ednimo del Fideicomiso' : 'Minimum Trust Balance',
+                };
+            }
+        } else if (feeType === 'contingency') {
+            feesObj.initial = {
+                amount: 0,
+                label: lang === 'es' ? 'Honorario de Contingencia' : 'Contingency Fee',
+            };
+            feesObj.contingency = {
+                pre_litigation: parseFloat(document.getElementById('preLitPercent').value) || 33.33,
+                post_litigation: parseFloat(document.getElementById('postLitPercent').value) || 40,
+            };
+        }
+
+        feesObj.includes = getListItems('includesList');
+        feesObj.excludes = getListItems('excludesList');
+        feesObj.note = document.getElementById('feeNote').value.trim();
+
+        var content = {
+            title: lang === 'es' ? 'Contrato de Servicios Legales' : 'Legal Services Retainer Agreement',
+            subtitle: subtitle,
+            firm: {
+                name: 'Jaskot Law',
+                address: '300 S Patterson Park Ave, Suite 203, Baltimore, MD 21231',
+                phone: '(240) 607-5244',
+                email: 'info@jaskot.law',
+            },
+            scope: {
+                heading: lang === 'es' ? 'Alcance de la Representaci\u00f3n' : 'Scope of Representation',
+                text: document.getElementById('scopeText').value.trim(),
+            },
+            fees: feesObj,
+            terms: getTermsFromAccordion(),
+            addon: null,
+            signature: {
+                agreement_text: lang === 'es'
+                    ? 'Al firmar a continuaci\u00f3n, confirmo que he le\u00eddo y entiendo los t\u00e9rminos de este Contrato de Servicios Legales. Acepto contratar a Jaskot Law para los servicios legales descritos anteriormente y el acuerdo de honorarios especificado.'
+                    : 'By signing below, I confirm that I have read and understand the terms of this Retainer Agreement. I agree to retain Jaskot Law for the legal services described above and to the fee arrangement specified.',
+                client_label: lang === 'es' ? 'Firma del Cliente' : 'Client Signature',
+                date_label: lang === 'es' ? 'Fecha' : 'Date',
+            },
+        };
+
+        return content;
+    }
+
+    // =========================================================================
+    // GENERATE LINK
+    // =========================================================================
+    document.getElementById('btnGenerate').addEventListener('click', async function() {
+        var btn = document.getElementById('btnGenerate');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+        var caseType = document.getElementById('caseType').value;
+        var feeType = getSelectedFeeType();
+        var contentJson = buildRetainerContentJson();
+
+        var body = {
+            case_type: caseType === 'custom' ? 'custom' : caseType,
+            custom_case_type_name: caseType === 'custom' ? (document.getElementById('customCaseTypeName').value.trim() || '') : '',
+            fee_type: feeType,
+            name: document.getElementById('clientName').value.trim(),
+            email: document.getElementById('clientEmail').value.trim(),
+            phone: document.getElementById('clientPhone').value.trim(),
+            lang: document.getElementById('clientLang').value,
+            clio_matter_number: document.getElementById('clioLookupQuery').value.trim(),
+            difficulty_surcharge: parseFloat(document.getElementById('surcharge').value) || 0,
+            discount_amount: parseFloat(document.getElementById('discount').value) || 0,
+            amount_paid_office: parseFloat(document.getElementById('officeAmount').value) || 0,
+            payment_method_office: document.getElementById('officeMethod').value,
+            payment_note: document.getElementById('officeNote').value.trim(),
+            addon_amount: 0,
+            attorney_note: document.getElementById('attorneyNote').value.trim(),
+            signing_attorney: document.getElementById('signingAttorney').value.trim(),
+            client_signatory: document.getElementById('clientSignatory').value.trim(),
+            retainer_content_json: JSON.stringify(contentJson),
+        };
+
+        // Add fee-type-specific fields
+        if (feeType === 'hourly') {
+            body.initial_retainer = parseFloat(document.getElementById('initialRetainer').value) || 0;
+            body.monthly_payment = parseFloat(document.getElementById('monthlyPayment').value) || 0;
+            body.trust_minimum = parseFloat(document.getElementById('trustMinimum').value) || 0;
+        } else if (feeType === 'flat') {
+            body.initial_retainer = parseFloat(document.getElementById('totalFlatFee').value) || 0;
+        } else if (feeType === 'hybrid') {
+            body.initial_retainer = parseFloat(document.getElementById('hybridFlat').value) || 0;
+            body.monthly_payment = parseFloat(document.getElementById('hybridMonthly').value) || 0;
+            body.trust_minimum = parseFloat(document.getElementById('hybridTrustMin').value) || 0;
+        }
+
+        body.scope_text = document.getElementById('scopeText').value.trim();
+
+        try {
+            var res = await fetch('/intake/staff/api/generate-link', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            var data = await res.json();
+
+            if (data.link) {
+                document.getElementById('linkOutput').value = data.link;
+                document.getElementById('linkResult').style.display = 'block';
+                document.getElementById('linkResult').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                alert(data.error || 'Failed to generate link');
+            }
+        } catch (e) {
+            alert('Connection error');
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Generate Magic Link';
+        checkGenerateReady();
+    });
+
+    // =========================================================================
+    // COPY LINK
+    // =========================================================================
+    document.getElementById('btnCopy').addEventListener('click', function() {
+        var input = document.getElementById('linkOutput');
+        navigator.clipboard.writeText(input.value).then(function() {
+            var btn = document.getElementById('btnCopy');
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(function() {
+                btn.textContent = 'Copy';
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    });
+
+    // =========================================================================
+    // SESSION SEARCH
+    // =========================================================================
+    document.getElementById('btnSearchSession').addEventListener('click', async function() {
+        var query = document.getElementById('sessionQuery').value.trim();
+        if (!query) return;
+
+        var btn = document.getElementById('btnSearchSession');
+        btn.textContent = 'Searching...';
+        btn.disabled = true;
+
+        try {
+            var res = await fetch('/intake/staff/api/lookup-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query }),
+            });
+            var data = await res.json();
+            renderSessions(data.sessions || []);
+        } catch (e) {
+            document.getElementById('sessionResults').innerHTML = '<div class="card"><p style="color: var(--red);">Search failed</p></div>';
+        }
+
+        btn.textContent = 'Search';
+        btn.disabled = false;
+    });
+
+    // Allow Enter key in session search
+    document.getElementById('sessionQuery').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnSearchSession').click(); }
+    });
+
+    function renderSessions(sessions) {
+        var container = document.getElementById('sessionResults');
+        if (!sessions.length) {
+            container.innerHTML = '<div class="card" style="text-align: center; color: var(--gray-500);">No sessions found</div>';
+            return;
+        }
+
+        container.innerHTML = sessions.map(function(s) {
+            var badges = [];
+            if (s.source === 'staff_link') badges.push('<span class="badge staff">Staff</span>');
+            if (s.signed) badges.push('<span class="badge signed">Signed</span>');
+            badges.push(s.paid ? '<span class="badge paid">Paid</span>' : '<span class="badge unpaid">Unpaid</span>');
+
+            var created = s.created_at ? new Date(s.created_at).toLocaleString() : 'N/A';
+            var base = '$' + (s.base_amount / 100).toLocaleString();
+            var charge = '$' + (s.charge_amount / 100).toLocaleString();
+
+            var details = '<strong>Case:</strong> ' + s.case_type;
+            if (s.fee_type) details += ' (' + s.fee_type + ')';
+            if (s.custom_case_type_name) details += ' [' + s.custom_case_type_name + ']';
+            details += ' &bull; <strong>Step:</strong> ' + s.funnel_step + ' &bull; <strong>Created:</strong> ' + created + '<br>';
+            details += '<strong>Email:</strong> ' + (s.email || 'N/A') + ' &bull; <strong>Phone:</strong> ' + (s.phone || 'N/A') + '<br>';
+            details += '<strong>Base:</strong> ' + base;
+            if (s.surcharge) details += ' + $' + (s.surcharge / 100).toLocaleString() + ' surcharge';
+            if (s.discount) details += ' - $' + (s.discount / 100).toLocaleString() + ' discount';
+            if (s.office_paid) details += ' - $' + (s.office_paid / 100).toLocaleString() + ' office';
+            details += ' = <strong>' + charge + ' on card</strong>';
+            if (s.paid && s.amount_paid) details += '<br><strong>Paid:</strong> $' + (s.amount_paid / 100).toLocaleString() + ' on ' + new Date(s.paid_at).toLocaleString();
+            if (s.clio_matter_number) details += '<br><strong>Clio:</strong> ' + s.clio_matter_number;
+            if (s.attorney_note) details += '<br><strong>Note:</strong> ' + s.attorney_note;
+
+            var tokenShort = s.token.substring(0, 12);
+
+            return '<div class="session-card">' +
+                '<div class="session-header">' +
+                    '<span class="session-name">' + (s.name || 'Unnamed') + '</span>' +
+                    '<div class="session-badges">' + badges.join('') + '</div>' +
+                '</div>' +
+                '<div class="session-detail">' + details + '</div>' +
+                '<span class="session-link" onclick="navigator.clipboard.writeText(\'' + s.token + '\')">Copy token: ' + tokenShort + '...</span>' +
+            '</div>';
+        }).join('');
+    }
+
+    // =========================================================================
+    // UTILITIES
+    // =========================================================================
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str || '';
+        return div.innerHTML;
+    }
+
+    // =========================================================================
+    // EVENT LISTENERS
+    // =========================================================================
+    document.getElementById('clientName').addEventListener('input', checkGenerateReady);
+
+    // Fee input changes (for summary)
+    ['surcharge', 'discount', 'officeAmount', 'initialRetainer', 'monthlyPayment',
+     'trustMinimum', 'totalFlatFee', 'hybridFlat', 'hybridMonthly', 'hybridTrustMin',
+     'preLitPercent', 'postLitPercent'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', updateFeeSummary);
+            el.addEventListener('change', updateFeeSummary);
+        }
+    });
+
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    updateFeeTypeFields();
+    updateFeeSummary();
+    checkGenerateReady();
+
+    // Fetch initial defaults for the default case type
+    fetchDefaults(true);
+    </script>
+</body>
+</html>

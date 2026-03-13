@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}{% if lang == 'es' %}Reservar Consulta{% else %}Book Consultation{% endif %} | Jaskot Law{% endblock %}
+
+{% block head_extra %}
+<style>
+    .steps-bar { background: var(--navy-light); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 12px 20px; }
+    .steps-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 0; }
+    .step { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 500; color: var(--gray-500); letter-spacing: 0.02em; white-space: nowrap; }
+    .step-number { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; border: 2px solid var(--gray-600); color: var(--gray-500); background: transparent; flex-shrink: 0; }
+    .step.active { color: var(--gold); }
+    .step.active .step-number { border-color: var(--gold); color: var(--white); background: var(--gold); }
+    .step-arrow { color: var(--gray-600); font-size: 0.65rem; margin: 0 8px; flex-shrink: 0; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-input { width: 100%; padding: 12px 14px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 0.95rem; font-family: inherit; color: var(--gray-700); transition: border-color 0.2s; }
+    .form-input:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(18,18,18,0.08); }
+    .form-select { appearance: none; background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236c6c6c' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 14px center; padding-right: 36px; }
+
+    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 12px; }
+    .slot-btn { padding: 10px 8px; border: 1px solid var(--gray-300); border-radius: var(--radius); background: var(--white); font-size: 0.85rem; font-family: inherit; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .slot-btn:hover { border-color: var(--navy); background: var(--gray-50); }
+    .slot-btn.selected { border-color: var(--navy); background: var(--navy); color: var(--white); }
+    .slot-date-header { font-size: 0.82rem; font-weight: 600; color: var(--gray-700); margin: 20px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--gray-200); }
+
+    .loading-spinner { text-align: center; padding: 40px; color: var(--gray-500); }
+    .no-slots { text-align: center; padding: 24px; color: var(--gray-500); font-size: 0.9rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="steps-bar">
+    <div class="steps-inner">
+        <div class="step active">
+            <span class="step-number">1</span>
+            <span>{% if lang == 'es' %}Reservar{% else %}Book{% endif %}</span>
+        </div>
+        <span class="step-arrow">&#9656;</span>
+        <div class="step">
+            <span class="step-number">2</span>
+            <span>{% if lang == 'es' %}Contrato{% else %}Retainer{% endif %}</span>
+        </div>
+        <span class="step-arrow">&#9656;</span>
+        <div class="step">
+            <span class="step-number">3</span>
+            <span>{% if lang == 'es' %}Confirmado{% else %}Confirmed{% endif %}</span>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="section">
+        <h2 style="font-size: 1.3rem; margin-bottom: 4px;">
+            {% if lang == 'es' %}Informaci&oacute;n de Contacto{% else %}Contact Information{% endif %}
+        </h2>
+        <p style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 20px;">
+            {% if lang == 'es' %}Necesitamos su informaci&oacute;n para programar la consulta.{% else %}We need your information to schedule the consultation.{% endif %}
+        </p>
+
+        <div class="form-group">
+            <label class="form-label" for="clientName">{% if lang == 'es' %}Nombre Completo{% else %}Full Name{% endif %}</label>
+            <input class="form-input" type="text" id="clientName" placeholder="{% if lang == 'es' %}Su nombre completo{% else %}Your full name{% endif %}" value="{{ session.name if session else '' }}">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="clientEmail">{% if lang == 'es' %}Correo Electr&oacute;nico{% else %}Email{% endif %}</label>
+            <input class="form-input" type="email" id="clientEmail" placeholder="you@example.com" value="{{ session.email if session else '' }}">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="clientPhone">{% if lang == 'es' %}Tel&eacute;fono{% else %}Phone{% endif %}</label>
+            <input class="form-input" type="tel" id="clientPhone" placeholder="(xxx) xxx-xxxx" value="{{ session.phone if session else '' }}">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="appointmentType">{% if lang == 'es' %}Tipo de Cita{% else %}Appointment Type{% endif %}</label>
+            <select class="form-input form-select" id="appointmentType">
+                <option value="in-person">{% if lang == 'es' %}En Persona (Baltimore){% else %}In Person (Baltimore){% endif %}</option>
+                <option value="virtual">{% if lang == 'es' %}Virtual (Zoom){% else %}Virtual (Zoom){% endif %}</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 style="font-size: 1.3rem; margin-bottom: 4px;">
+            {% if lang == 'es' %}Seleccionar Horario{% else %}Select a Time{% endif %}
+        </h2>
+        <p style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 16px;">
+            {% if lang == 'es' %}Elija un horario disponible para su consulta.{% else %}Choose an available time for your consultation.{% endif %}
+        </p>
+        <div id="slotsContainer">
+            <div class="loading-spinner">{% if lang == 'es' %}Cargando horarios disponibles...{% else %}Loading available times...{% endif %}</div>
+        </div>
+    </div>
+
+    <button class="btn-primary" id="btnContinue" disabled>
+        {% if lang == 'es' %}Continuar al Contrato{% else %}Continue to Retainer{% endif %}
+    </button>
+</div>
+
+<script>
+const CASE_TYPE = '{{ case_type }}';
+const LANG = '{{ lang }}';
+let selectedSlot = null;
+
+async function loadSlots() {
+    const container = document.getElementById('slotsContainer');
+    const now = new Date();
+    const start = now.toISOString().split('T')[0];
+    const end = new Date(now.getTime() + 14 * 86400000).toISOString().split('T')[0];
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    try {
+        const res = await fetch(`/intake/api/slots/${CASE_TYPE}?start=${start}&end=${end}&timeZone=${tz}`);
+        const slots = await res.json();
+        renderSlots(slots, tz, container);
+    } catch (e) {
+        container.innerHTML = '<div class="no-slots">' + (LANG === 'es' ? 'No se pudieron cargar los horarios. Intente de nuevo.' : 'Could not load times. Please try again.') + '</div>';
+    }
+}
+
+function renderSlots(slots, tz, container) {
+    if (!slots || Object.keys(slots).length === 0) {
+        container.innerHTML = '<div class="no-slots">' + (LANG === 'es' ? 'No hay horarios disponibles. Por favor llame al (240) 607-5244.' : 'No available times. Please call (240) 607-5244.') + '</div>';
+        return;
+    }
+
+    let html = '';
+    for (const [date, times] of Object.entries(slots)) {
+        const d = new Date(date + 'T12:00:00');
+        const dayLabel = d.toLocaleDateString(LANG === 'es' ? 'es-US' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        html += `<div class="slot-date-header">${dayLabel}</div><div class="slot-grid">`;
+        for (const slot of times) {
+            const t = new Date(slot.time);
+            const timeLabel = t.toLocaleTimeString(LANG === 'es' ? 'es-US' : 'en-US', { hour: 'numeric', minute: '2-digit' });
+            html += `<button class="slot-btn" data-time="${slot.time}" onclick="selectSlot(this)">${timeLabel}</button>`;
+        }
+        html += '</div>';
+    }
+    container.innerHTML = html;
+}
+
+function selectSlot(btn) {
+    document.querySelectorAll('.slot-btn.selected').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedSlot = btn.dataset.time;
+    checkReady();
+}
+
+function checkReady() {
+    const name = document.getElementById('clientName').value.trim();
+    const email = document.getElementById('clientEmail').value.trim();
+    const phone = document.getElementById('clientPhone').value.trim();
+    document.getElementById('btnContinue').disabled = !(name && email && phone && selectedSlot);
+}
+
+document.querySelectorAll('.form-input').forEach(el => el.addEventListener('input', checkReady));
+
+document.getElementById('btnContinue').addEventListener('click', async () => {
+    const btn = document.getElementById('btnContinue');
+    btn.disabled = true;
+    btn.textContent = LANG === 'es' ? 'Procesando...' : 'Processing...';
+
+    const body = {
+        case_type: CASE_TYPE,
+        name: document.getElementById('clientName').value.trim(),
+        email: document.getElementById('clientEmail').value.trim(),
+        phone: document.getElementById('clientPhone').value.trim(),
+        lang: LANG,
+        selected_slot: selectedSlot,
+        appointment_type: document.getElementById('appointmentType').value,
+    };
+
+    try {
+        const res = await fetch('/intake/api/create-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.token) {
+            window.location.href = `/intake/${CASE_TYPE}/retainer?token=${data.token}&lang=${LANG}`;
+        } else {
+            alert(data.error || 'Error creating session');
+            btn.disabled = false;
+            btn.textContent = LANG === 'es' ? 'Continuar al Contrato' : 'Continue to Retainer';
+        }
+    } catch (e) {
+        alert(LANG === 'es' ? 'Error de conexi\u00f3n' : 'Connection error');
+        btn.disabled = false;
+        btn.textContent = LANG === 'es' ? 'Continuar al Contrato' : 'Continue to Retainer';
+    }
+});
+
+loadSlots();
+</script>
+{% endblock %}

@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  generic-intake:
+    build:
+      context: ..
+      dockerfile: generic-intake/Dockerfile
+    container_name: generic-intake
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    networks:
+      - calcom_calcom
+
+networks:
+  calcom_calcom:
+    external: true

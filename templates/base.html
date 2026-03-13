@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ ct.display_name }} | Jaskot Law{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --navy: #121212;
+            --navy-light: #1e1e1e;
+            --navy-dark: #0a0a0a;
+            --gold: #af2a28;
+            --gold-light: #c23230;
+            --gold-dark: #8e2220;
+            --gold-pale: #fde8e8;
+            --white: #ffffff;
+            --gray-50: #f8f9fa;
+            --gray-100: #f2f2f2;
+            --gray-200: #e5e5e5;
+            --gray-300: #d5d5d5;
+            --gray-400: #a0a0a0;
+            --gray-500: #6c6c6c;
+            --gray-600: #4a4a4a;
+            --gray-700: #121212;
+            --green: #2d8a4e;
+            --green-light: #e6f4ec;
+            --red: #c53030;
+            --red-light: #fde8e8;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --font-body: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-heading: 'Frank Ruhl Libre', Georgia, serif;
+        }
+        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+        body { font-family: var(--font-body); background: var(--gray-100); color: var(--gray-600); line-height: 1.6; min-height: 100vh; }
+        h1, h2, h3 { font-family: var(--font-heading); color: var(--gray-700); line-height: 1.25; }
+        a { color: inherit; text-decoration: none; }
+
+        .header { background: var(--navy-dark); padding: 14px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+        .header-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .header-brand { color: var(--white); font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; }
+        .header-lang { font-size: 0.75rem; color: var(--white); background: var(--gold); padding: 4px 10px; border-radius: 52px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; cursor: pointer; border: none; }
+        .header-lang:hover { background: var(--gold-light); }
+
+        .main { max-width: 720px; margin: 0 auto; padding: 20px 16px 100px; }
+        .section { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--gray-200); padding: 24px; margin-bottom: 24px; }
+
+        .footer { background: var(--navy-dark); color: var(--gray-500); text-align: center; padding: 32px 20px; font-size: 0.8rem; }
+        .footer a { color: var(--gold); }
+
+        .btn-primary { display: block; width: 100%; padding: 16px 24px; background: var(--navy); color: var(--white); border: none; border-radius: 52px; font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.3s; letter-spacing: 0.02em; box-shadow: var(--shadow-sm); text-align: center; }
+        .btn-primary:hover:not(:disabled) { background: var(--gold); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        @media (max-width: 480px) { .section { padding: 20px 16px; } }
+    </style>
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <a href="/intake/{{ case_type }}/?lang={{ lang }}" class="header-brand">Jaskot Law</a>
+            <a href="?lang={{ 'en' if lang == 'es' else 'es' }}{% if token %}&token={{ token }}{% endif %}" class="header-lang">{{ 'English' if lang == 'es' else 'Español' }}</a>
+        </div>
+    </header>
+
+    {% block content %}{% endblock %}
+
+    <footer class="footer">
+        <p>Jaskot Law &mdash; 300 S Patterson Park Ave, Suite 203, Baltimore, MD 21231</p>
+        <p style="margin-top: 4px;">(240) 607-5244 &bull; <a href="mailto:info@jaskot.law">info@jaskot.law</a></p>
+    </footer>
+</body>
+</html>

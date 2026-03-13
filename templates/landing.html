@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ct.display_name if lang == 'en' else ct.display_name_es }} | Jaskot Law{% endblock %}
+
+{% block head_extra %}
+<style>
+    .hero {
+        background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+        text-align: center;
+        padding: 64px 32px 56px;
+        margin-bottom: 0;
+    }
+    .hero h1 { color: var(--white); font-size: clamp(1.8rem, 5vw, 2.4rem); margin-bottom: 16px; }
+    .hero h1 span { color: var(--gold); }
+    .hero p { color: rgba(255,255,255,0.7); font-size: 1.1rem; max-width: 560px; margin: 0 auto; line-height: 1.7; }
+
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 32px; }
+    .feature-card { background: var(--white); border-radius: var(--radius-lg); padding: 28px 24px; box-shadow: var(--shadow-md); border: 1px solid var(--gray-200); }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 12px; }
+    .feature-card h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    .feature-card p { font-size: 0.88rem; color: var(--gray-500); line-height: 1.6; }
+
+    .fee-highlight { background: linear-gradient(135deg, var(--navy), var(--navy-dark)); border-radius: var(--radius-lg); padding: 32px; text-align: center; margin: 32px 0; box-shadow: var(--shadow-lg); }
+    .fee-highlight .fee-label { color: rgba(255,255,255,0.5); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: 6px; }
+    .fee-highlight .fee-amount { color: var(--white); font-family: var(--font-heading); font-size: clamp(2rem, 6vw, 2.4rem); font-weight: 700; }
+    .fee-highlight .fee-note { color: var(--gray-400); font-size: 0.82rem; margin-top: 8px; }
+
+    .cta-section { text-align: center; padding: 40px 20px; }
+    .cta-section p { color: var(--gray-500); font-size: 0.9rem; margin-top: 12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>
+        {% if lang == 'es' %}
+            Servicios Legales de <span>{{ ct.display_name_es }}</span>
+        {% else %}
+            <span>{{ ct.display_name }}</span> Legal Services
+        {% endif %}
+    </h1>
+    <p>
+        {% if lang == 'es' %}
+            {{ ct.scope_es }}
+        {% else %}
+            {{ ct.scope_en }}
+        {% endif %}
+    </p>
+</section>
+
+<div class="main">
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon">&#9878;</div>
+            <h3>{% if lang == 'es' %}Representaci&oacute;n Legal Experta{% else %}Expert Legal Representation{% endif %}</h3>
+            <p>{% if lang == 'es' %}Abogados de inmigraci&oacute;n con experiencia dedicados a su caso.{% else %}Experienced immigration attorneys dedicated to your case.{% endif %}</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">&#128196;</div>
+            <h3>{% if lang == 'es' %}Preparaci&oacute;n Completa{% else %}Complete Preparation{% endif %}</h3>
+            <p>{% if lang == 'es' %}Preparaci&oacute;n y presentaci&oacute;n de todos los formularios y documentaci&oacute;n de apoyo.{% else %}Preparation and filing of all forms and supporting documentation.{% endif %}</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">&#127758;</div>
+            <h3>{% if lang == 'es' %}Servicio Biling&uuml;e{% else %}Bilingual Service{% endif %}</h3>
+            <p>{% if lang == 'es' %}Servicio completo en espa&ntilde;ol e ingl&eacute;s para su comodidad.{% else %}Full service in English and Spanish for your convenience.{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="fee-highlight">
+        <div class="fee-label">{% if lang == 'es' %}Honorario Inicial{% else %}Initial Retainer Fee{% endif %}</div>
+        <div class="fee-amount">${{ '{:,}'.format(ct.base_fee_cents // 100) }}</div>
+        <div class="fee-note">{% if lang == 'es' %}Facturaci&oacute;n por hora contra fideicomiso{% else %}Hourly billing against trust{% endif %}</div>
+    </div>
+
+    <div class="cta-section">
+        <a href="/intake/{{ case_type }}/book?lang={{ lang }}" class="btn-primary" style="max-width: 400px; margin: 0 auto; display: block;">
+            {% if lang == 'es' %}Reservar Consulta{% else %}Book Consultation{% endif %}
+        </a>
+        <p>{% if lang == 'es' %}O ll&aacute;menos al (240) 607-5244{% else %}Or call us at (240) 607-5244{% endif %}</p>
+    </div>
+</div>
+{% endblock %}

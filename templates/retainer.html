@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block title %}{% if lang == 'es' %}Contrato{% else %}Retainer{% endif %} | Jaskot Law{% endblock %}
+
+{% block head_extra %}
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+    /* Steps bar */
+    .steps-bar { background: var(--navy-light); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 12px 20px; }
+    .steps-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+    .step { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 500; color: var(--gray-500); letter-spacing: 0.02em; white-space: nowrap; }
+    .step-number { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; border: 2px solid var(--gray-600); color: var(--gray-500); background: transparent; flex-shrink: 0; }
+    .step.active { color: var(--gold); }
+    .step.active .step-number { border-color: var(--gold); color: var(--white); background: var(--gold); }
+    .step.completed { color: var(--gold-light); }
+    .step.completed .step-number { border-color: var(--gold-light); background: var(--gold-light); color: var(--white); font-size: 0; }
+    .step.completed .step-number::after { content: '\2713'; font-size: 0.72rem; font-weight: 700; }
+    .step-arrow { color: var(--gray-600); font-size: 0.65rem; margin: 0 8px; flex-shrink: 0; }
+
+    /* Document card */
+    .doc-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; border: 1px solid var(--gray-200); }
+    .doc-header { background: var(--navy); padding: 28px 24px 22px; text-align: center; border-bottom: 3px solid var(--gold); }
+    .doc-title { font-family: var(--font-heading); color: var(--white); font-size: 1.35rem; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+    .doc-subtitle { color: rgba(255,255,255,0.6); font-size: 0.82rem; font-weight: 500; }
+    .doc-body { padding: 24px; }
+
+    .firm-block { text-align: center; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--gray-200); }
+    .firm-name { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+    .firm-detail { font-size: 0.8rem; color: var(--gray-600); line-height: 1.5; }
+
+    .client-block { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px; margin-bottom: 24px; }
+    .client-block-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gray-500); font-weight: 600; margin-bottom: 10px; }
+    .client-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; font-size: 0.88rem; }
+    .client-label { color: var(--gray-500); font-size: 0.78rem; min-width: 52px; flex-shrink: 0; }
+    .client-value { color: var(--gray-700); font-weight: 500; }
+
+    .doc-section-heading { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 600; color: var(--navy); margin-top: 24px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--gold-pale); }
+    .doc-text { font-size: 0.88rem; color: var(--gray-700); line-height: 1.7; margin-bottom: 16px; }
+
+    .fee-card { background: linear-gradient(135deg, var(--navy), var(--navy-dark)); border-radius: var(--radius-lg); padding: 24px; text-align: center; margin: 20px 0; box-shadow: var(--shadow-md); }
+    .fee-label { color: rgba(255,255,255,0.5); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: 6px; }
+    .fee-amount { color: var(--white); font-family: var(--font-heading); font-size: clamp(2rem, 6vw, 2.4rem); font-weight: 700; }
+    .fee-note-text { color: var(--gray-400); font-size: 0.75rem; margin-top: 4px; }
+
+    .check-list { list-style: none; padding: 0; margin: 12px 0; }
+    .check-list li { position: relative; padding: 8px 0 8px 30px; font-size: 0.85rem; color: var(--gray-700); line-height: 1.5; border-bottom: 1px solid var(--gray-100); }
+    .check-list li:last-child { border-bottom: none; }
+    .check-list li::before { position: absolute; left: 0; top: 8px; font-size: 0.92rem; font-weight: 700; }
+    .check-list.includes li::before { content: '\2713'; color: var(--green); }
+    .check-list.excludes li::before { content: '\2717'; color: var(--red); }
+
+    .fee-footnote { background: var(--gold-pale); border-left: 3px solid var(--gold); padding: 12px 14px; border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.8rem; color: var(--gray-700); line-height: 1.6; margin: 16px 0; }
+
+    .terms-heading { font-size: 0.92rem; font-weight: 600; color: var(--navy); margin-top: 18px; margin-bottom: 6px; }
+    .terms-text { font-size: 0.85rem; color: var(--gray-700); line-height: 1.7; }
+    .terms-list { list-style: none; padding: 0; margin: 8px 0; }
+    .terms-list li { padding: 4px 0 4px 20px; font-size: 0.85rem; color: var(--gray-700); position: relative; }
+    .terms-list li::before { content: '\2013'; position: absolute; left: 0; color: var(--gray-400); }
+
+    /* Agreement checkbox */
+    .agree-block { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--gray-200); padding: 20px 24px; margin-top: 24px; }
+    .agree-check-wrapper { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+    .agree-check-wrapper input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--navy); cursor: pointer; flex-shrink: 0; }
+    .agree-check-wrapper label { font-size: 0.85rem; color: var(--gray-700); line-height: 1.6; cursor: pointer; }
+
+    /* Signature */
+    .sig-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--gray-200); padding: 24px; transition: opacity 0.3s; }
+    .sig-card.locked { opacity: 0.4; pointer-events: none; }
+    .sig-heading { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+    .sig-agreement-text { font-size: 0.85rem; color: var(--gray-600); line-height: 1.6; margin-bottom: 16px; }
+    .sig-canvas-wrapper { position: relative; background: var(--white); border: 2px solid var(--gray-300); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+    #signatureCanvas { display: block; width: 100%; height: 180px; touch-action: none; cursor: crosshair; }
+    .sig-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--gray-400); font-size: 0.9rem; font-style: italic; pointer-events: none; text-align: center; }
+    .sig-placeholder.hidden { opacity: 0; }
+    .sig-line { position: absolute; bottom: 40px; left: 24px; right: 24px; height: 1px; background: var(--gray-300); pointer-events: none; }
+    .sig-x { position: absolute; bottom: 30px; left: 12px; color: var(--gray-400); font-size: 1rem; font-weight: 500; pointer-events: none; }
+    .sig-actions { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+    .btn-clear { background: none; border: 1px solid var(--gray-300); color: var(--gray-600); padding: 6px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 500; cursor: pointer; font-family: inherit; }
+
+    /* Payment */
+    .pay-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--gray-200); padding: 24px; transition: opacity 0.3s; }
+    .pay-card.locked { opacity: 0.4; pointer-events: none; }
+    .pay-heading { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 600; color: var(--navy); margin-bottom: 16px; }
+    #card-element { border: 1px solid var(--gray-300); border-radius: var(--radius); padding: 14px; margin-bottom: 16px; transition: border-color 0.2s; }
+    #card-element.StripeElement--focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(18,18,18,0.08); }
+    #card-errors { color: var(--red); font-size: 0.82rem; margin-bottom: 12px; min-height: 20px; }
+    .pay-total { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-top: 1px solid var(--gray-200); margin-bottom: 16px; }
+    .pay-total-label { font-size: 0.85rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .pay-total-amount { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700; color: var(--navy); }
+
+    .success-banner { display: none; background: var(--green-light); border: 1px solid var(--green); border-radius: var(--radius-lg); padding: 24px; text-align: center; margin-top: 24px; }
+    .success-banner h3 { color: var(--green); font-size: 1.2rem; margin-bottom: 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="steps-bar">
+    <div class="steps-inner">
+        <div class="step completed"><span class="step-number">1</span><span>{% if lang == 'es' %}Reservar{% else %}Book{% endif %}</span></div>
+        <span class="step-arrow">&#9656;</span>
+        <div class="step active"><span class="step-number">2</span><span>{% if lang == 'es' %}Contrato{% else %}Retainer{% endif %}</span></div>
+        <span class="step-arrow">&#9656;</span>
+        <div class="step"><span class="step-number">3</span><span>{% if lang == 'es' %}Confirmado{% else %}Confirmed{% endif %}</span></div>
+    </div>
+</div>
+
+<div class="main">
+    <!-- Retainer Agreement Document -->
+    <div class="doc-card">
+        <div class="doc-header">
+            <div class="doc-title">{{ content.title }}</div>
+            <div class="doc-subtitle">{{ content.subtitle }}</div>
+        </div>
+        <div class="doc-body">
+            <!-- Firm info -->
+            <div class="firm-block">
+                <div class="firm-name">{{ content.firm.name }}</div>
+                <div class="firm-detail">{{ content.firm.address }}</div>
+                <div class="firm-detail">{{ content.firm.phone }} | {{ content.firm.email }}</div>
+            </div>
+
+            <!-- Client info -->
+            <div class="client-block">
+                <div class="client-block-title">{% if lang == 'es' %}Informaci&oacute;n del Cliente{% else %}Client Information{% endif %}</div>
+                <div class="client-row"><span class="client-label">{% if lang == 'es' %}Nombre{% else %}Name{% endif %}</span><span class="client-value">{{ session.name }}</span></div>
+                <div class="client-row"><span class="client-label">{% if lang == 'es' %}Correo{% else %}Email{% endif %}</span><span class="client-value">{{ session.email }}</span></div>
+                <div class="client-row"><span class="client-label">{% if lang == 'es' %}Tel{% else %}Phone{% endif %}</span><span class="client-value">{{ session.phone }}</span></div>
+            </div>
+
+            <!-- Scope -->
+            <div class="doc-section-heading">{{ content.scope.heading }}</div>
+            <div class="doc-text">{{ content.scope.text }}</div>
+
+            <!-- Fees -->
+            <div class="doc-section-heading">{{ content.fees.heading }}</div>
+            <div class="fee-card">
+                {% if content.fees.get('contingency') %}
+                <div class="fee-label">{{ content.fees.initial.label }}</div>
+                <div class="fee-amount">{{ content.fees.contingency.pre_litigation }}% / {{ content.fees.contingency.post_litigation }}%</div>
+                <div class="fee-note-text">{% if lang == 'es' %}Pre-litigio / Post-litigio{% else %}Pre-litigation / Post-litigation{% endif %}</div>
+                {% else %}
+                <div class="fee-label">{{ content.fees.initial.label }}</div>
+                <div class="fee-amount">${{ '{:,}'.format(content.fees.initial.amount) }}</div>
+                {% if content.fees.get('monthly') %}
+                <div class="fee-note-text">{{ content.fees.monthly.label }}: ${{ '{:,}'.format(content.fees.monthly.amount) }}/{% if lang == 'es' %}mes{% else %}mo{% endif %}</div>
+                {% endif %}
+                {% if content.fees.get('min_trust') %}
+                <div class="fee-note-text">{{ content.fees.min_trust.label }}: ${{ '{:,}'.format(content.fees.min_trust.amount) }}</div>
+                {% endif %}
+                {% endif %}
+            </div>
+
+            <!-- Includes -->
+            {% if content.fees.get('includes') %}
+            <p style="font-size: 0.78rem; font-weight: 600; color: var(--gray-700); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">{% if lang == 'es' %}Incluido{% else %}Included{% endif %}</p>
+            <ul class="check-list includes">
+                {% for item in content.fees.includes %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <!-- Excludes -->
+            {% if content.fees.get('excludes') %}
+            <p style="font-size: 0.78rem; font-weight: 600; color: var(--gray-700); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 16px; margin-bottom: 4px;">{% if lang == 'es' %}No Incluido{% else %}Not Included{% endif %}</p>
+            <ul class="check-list excludes">
+                {% for item in content.fees.excludes %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <!-- Fee note -->
+            {% if content.fees.get('note') %}
+            <div class="fee-footnote">{{ content.fees.note }}</div>
+            {% endif %}
+
+            <!-- Terms -->
+            <div class="terms-section">
+                {% for term in content.terms %}
+                <div class="terms-heading">{{ term.heading }}</div>
+                <div class="terms-text">{{ term.text }}</div>
+                {% if term.get('items') %}
+                <ul class="terms-list">
+                    {% for item in term.get('items') %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if term.get('text_after') %}
+                <div class="terms-text">{{ term.get('text_after') }}</div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Agreement checkbox -->
+    <div class="agree-block">
+        <div class="agree-check-wrapper">
+            <input type="checkbox" id="agreeCheck">
+            <label for="agreeCheck">
+                {% if lang == 'es' %}
+                    He le&iacute;do y acepto los t&eacute;rminos de este Contrato de Servicios Legales. Acepto contratar a Jaskot Law para los servicios legales descritos y el acuerdo de honorarios especificado.
+                {% else %}
+                    I have read and agree to the terms of this Retainer Agreement. I agree to retain Jaskot Law for the legal services described above and to the fee arrangement specified.
+                {% endif %}
+            </label>
+        </div>
+    </div>
+
+    <!-- Signature -->
+    <div class="sig-card locked" id="sigSection" style="margin-top: 24px;">
+        <div class="sig-heading">{{ content.signature.client_label }}</div>
+        <div class="sig-agreement-text">{{ content.signature.agreement_text }}</div>
+        <div class="sig-canvas-wrapper" id="sigWrapper">
+            <canvas id="signatureCanvas"></canvas>
+            <div class="sig-placeholder" id="sigPlaceholder">{% if lang == 'es' %}Firme aqu&iacute;{% else %}Sign here{% endif %}</div>
+            <div class="sig-line"></div>
+            <div class="sig-x">X</div>
+        </div>
+        <div class="sig-actions">
+            <button class="btn-clear" id="btnClearSig">{% if lang == 'es' %}Borrar{% else %}Clear{% endif %}</button>
+        </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="pay-card locked" id="paySection" style="margin-top: 24px;">
+        <div class="pay-heading">{% if lang == 'es' %}Informaci&oacute;n de Pago{% else %}Payment Information{% endif %}</div>
+        <div id="card-element"></div>
+        <div id="card-errors"></div>
+        <div class="pay-total">
+            <span class="pay-total-label">{% if lang == 'es' %}Total{% else %}Total{% endif %}</span>
+            <span class="pay-total-amount">${{ '{:,}'.format(charge_cents // 100) }}</span>
+        </div>
+        <button class="btn-primary" id="btnPay" disabled>
+            {% if lang == 'es' %}Pagar ${{ '{:,}'.format(charge_cents // 100) }}{% else %}Pay ${{ '{:,}'.format(charge_cents // 100) }}{% endif %}
+        </button>
+    </div>
+
+    <!-- Success banner (shown after payment) -->
+    <div class="success-banner" id="successBanner">
+        <h3>{% if lang == 'es' %}Pago Exitoso{% else %}Payment Successful{% endif %}</h3>
+        <p>{% if lang == 'es' %}Redirigiendo...{% else %}Redirecting...{% endif %}</p>
+    </div>
+</div>
+
+<script>
+const TOKEN = '{{ token }}';
+const CASE_TYPE = '{{ case_type }}';
+const LANG = '{{ lang }}';
+const STRIPE_KEY = '{{ stripe_public_key }}';
+
+// --- Agreement checkbox ---
+const agreeCheck = document.getElementById('agreeCheck');
+const sigSection = document.getElementById('sigSection');
+agreeCheck.addEventListener('change', () => {
+    sigSection.classList.toggle('locked', !agreeCheck.checked);
+});
+
+// --- Signature Pad ---
+const canvas = document.getElementById('signatureCanvas');
+const ctx = canvas.getContext('2d');
+const placeholder = document.getElementById('sigPlaceholder');
+let drawing = false;
+let hasSigned = false;
+
+function resizeCanvas() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = 180;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches ? e.touches[0] : e;
+    return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+    drawing = true;
+    hasSigned = true;
+    placeholder.classList.add('hidden');
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    ctx.strokeStyle = '#121212';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+});
+
+canvas.addEventListener('pointermove', (e) => {
+    if (!drawing) return;
+    const pos = getPos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+});
+
+canvas.addEventListener('pointerup', () => { drawing = false; updatePaySection(); });
+canvas.addEventListener('pointerleave', () => { drawing = false; });
+
+document.getElementById('btnClearSig').addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasSigned = false;
+    placeholder.classList.remove('hidden');
+    updatePaySection();
+});
+
+function updatePaySection() {
+    const paySection = document.getElementById('paySection');
+    paySection.classList.toggle('locked', !hasSigned || !agreeCheck.checked);
+}
+
+agreeCheck.addEventListener('change', updatePaySection);
+
+// --- Stripe ---
+const stripe = Stripe(STRIPE_KEY);
+const elements = stripe.elements();
+const cardElement = elements.create('card', {
+    style: {
+        base: { fontSize: '16px', color: '#121212', fontFamily: "'Source Sans Pro', sans-serif", '::placeholder': { color: '#a0a0a0' } },
+        invalid: { color: '#c53030' },
+    }
+});
+cardElement.mount('#card-element');
+
+cardElement.on('change', (event) => {
+    const errEl = document.getElementById('card-errors');
+    errEl.textContent = event.error ? event.error.message : '';
+    document.getElementById('btnPay').disabled = !event.complete;
+});
+
+document.getElementById('btnPay').addEventListener('click', async () => {
+    const btn = document.getElementById('btnPay');
+    btn.disabled = true;
+    btn.textContent = LANG === 'es' ? 'Procesando...' : 'Processing...';
+
+    const signatureData = canvas.toDataURL('image/png');
+
+    // Create payment intent
+    const res = await fetch('/intake/api/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: TOKEN, signature: signatureData }),
+    });
+    const piData = await res.json();
+
+    if (piData.error) {
+        document.getElementById('card-errors').textContent = piData.error;
+        btn.disabled = false;
+        btn.textContent = LANG === 'es' ? 'Pagar ${{ '{:,}'.format(charge_cents // 100) }}' : 'Pay ${{ '{:,}'.format(charge_cents // 100) }}';
+        return;
+    }
+
+    // Confirm payment
+    const { error, paymentIntent } = await stripe.confirmCardPayment(piData.clientSecret, {
+        payment_method: { card: cardElement },
+    });
+
+    if (error) {
+        document.getElementById('card-errors').textContent = error.message;
+        btn.disabled = false;
+        btn.textContent = LANG === 'es' ? 'Pagar ${{ '{:,}'.format(charge_cents // 100) }}' : 'Pay ${{ '{:,}'.format(charge_cents // 100) }}';
+    } else if (paymentIntent.status === 'succeeded') {
+        document.getElementById('successBanner').style.display = 'block';
+        document.getElementById('paySection').style.display = 'none';
+        setTimeout(() => {
+            window.location.href = `/intake/${CASE_TYPE}/confirmed?token=${TOKEN}&lang=${LANG}`;
+        }, 2000);
+    }
+});
+</script>
+{% endblock %}
