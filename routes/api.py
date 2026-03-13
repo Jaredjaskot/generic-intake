@@ -106,8 +106,22 @@ def create_payment_intent():
 
     if amount_cents < 50:
         # No payment needed (fully paid at office or $0 amount)
+        agreement.paid = True
+        agreement.paid_at = datetime.now(timezone.utc)
         session.funnel_step = "retainer_signed"
         db.session.commit()
+
+        # Trigger post-payment processing (PDF email + Dropbox) in background
+        import threading
+        from flask import current_app
+        from routes.webhooks import _process_post_payment
+        app = current_app._get_current_object()
+        thread = threading.Thread(
+            target=_process_post_payment,
+            args=(app, session.id, agreement.id, {}),
+        )
+        thread.start()
+
         return jsonify({"clientSecret": None, "amount": 0, "paid": True})
 
     try:
