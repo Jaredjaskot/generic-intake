@@ -87,7 +87,11 @@ jobs:
               "BASE_URL=https://book.jaskot.law" \
               "SMTP_EMAIL=${{ secrets.SMTP_EMAIL }}" \
               "SMTP_APP_PASSWORD=${{ secrets.SMTP_APP_PASSWORD }}" \
-              "STAFF_NOTIFY_EMAIL=jared@jaskot.law"
+              "STAFF_NOTIFY_EMAIL=jared@jaskot.law" \
+              "DROPBOX_APP_KEY=${{ secrets.DROPBOX_APP_KEY }}" \
+              "DROPBOX_APP_SECRET=${{ secrets.DROPBOX_APP_SECRET }}" \
+              "DROPBOX_REFRESH_TOKEN=${{ secrets.DROPBOX_REFRESH_TOKEN }}" \
+              "DROPBOX_RETAINER_PATH=${{ secrets.DROPBOX_RETAINER_PATH }}"
             do
               VAR_NAME="${VAR_LINE%%=*}"
               if [ -n "${VAR_LINE#*=}" ]; then

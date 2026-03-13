@@ -116,6 +116,20 @@ def _process_post_payment(app, session_id, agreement_id, metadata):
                 signed_at=agreement.signed_at,
             )
             _email_pdf(session, pdf_bytes, ct, content)
+
+            # Upload to Dropbox (Clio-linked folder)
+            try:
+                from integrations.dropbox_upload import upload_retainer_to_dropbox
+                safe_name = session.name.strip().replace(" ", "_").replace("/", "-")
+                filename = f"Jaskot_Law_Retainer_{safe_name}.pdf"
+                upload_retainer_to_dropbox(
+                    pdf_bytes=pdf_bytes,
+                    client_name=session.name,
+                    filename=filename,
+                    matter_number=session.clio_matter_number or "",
+                )
+            except Exception:
+                log.exception("Dropbox upload failed (non-fatal)")
         except Exception:
             log.exception("PDF generation/email failed (non-fatal)")
 
