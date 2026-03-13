@@ -237,6 +237,7 @@
 
     <!-- Payment -->
     <div class="pay-card locked" id="paySection" style="margin-top: 24px;">
+        {% if charge_cents > 0 %}
         <div class="pay-heading">{% if lang == 'es' %}Informaci&oacute;n de Pago{% else %}Payment Information{% endif %}</div>
         <div id="card-element"></div>
         <div id="card-errors"></div>
@@ -247,6 +248,14 @@
         <button class="btn-primary" id="btnPay" disabled>
             {% if lang == 'es' %}Pagar ${{ '{:,}'.format(charge_cents // 100) }}{% else %}Pay ${{ '{:,}'.format(charge_cents // 100) }}{% endif %}
         </button>
+        {% else %}
+        <div class="pay-heading">{% if lang == 'es' %}Confirmar Firma{% else %}Confirm Signature{% endif %}</div>
+        <div id="card-element" style="display:none;"></div>
+        <div id="card-errors"></div>
+        <button class="btn-primary" id="btnPay">
+            {% if lang == 'es' %}Enviar Contrato Firmado{% else %}Submit Signed Agreement{% endif %}
+        </button>
+        {% endif %}
     </div>
 
     <!-- Success banner (shown after payment) -->
@@ -328,21 +337,26 @@ function updatePaySection() {
 agreeCheck.addEventListener('change', updatePaySection);
 
 // --- Stripe ---
-const stripe = Stripe(STRIPE_KEY);
-const elements = stripe.elements();
-const cardElement = elements.create('card', {
-    style: {
-        base: { fontSize: '16px', color: '#121212', fontFamily: "'Source Sans Pro', sans-serif", '::placeholder': { color: '#a0a0a0' } },
-        invalid: { color: '#c53030' },
-    }
-});
-cardElement.mount('#card-element');
+const CHARGE_CENTS = {{ charge_cents }};
+let stripe, elements, cardElement;
 
-cardElement.on('change', (event) => {
-    const errEl = document.getElementById('card-errors');
-    errEl.textContent = event.error ? event.error.message : '';
-    document.getElementById('btnPay').disabled = !event.complete;
-});
+if (CHARGE_CENTS > 0 && STRIPE_KEY) {
+    stripe = Stripe(STRIPE_KEY);
+    elements = stripe.elements();
+    cardElement = elements.create('card', {
+        style: {
+            base: { fontSize: '16px', color: '#121212', fontFamily: "'Source Sans Pro', sans-serif", '::placeholder': { color: '#a0a0a0' } },
+            invalid: { color: '#c53030' },
+        }
+    });
+    cardElement.mount('#card-element');
+
+    cardElement.on('change', (event) => {
+        const errEl = document.getElementById('card-errors');
+        errEl.textContent = event.error ? event.error.message : '';
+        document.getElementById('btnPay').disabled = !event.complete;
+    });
+}
 
 document.getElementById('btnPay').addEventListener('click', async () => {
     const btn = document.getElementById('btnPay');
