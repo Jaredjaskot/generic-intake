@@ -111,9 +111,9 @@ def generate_link():
     addon_dollars = float(data.get("addon_amount", 0) or 0)
 
     # Fee structure — dollar inputs converted to cents
-    initial_retainer_dollars = float(data.get("initial_retainer_cents", 0) or 0)
-    monthly_payment_dollars = float(data.get("monthly_payment_cents", 0) or 0)
-    trust_minimum_dollars = float(data.get("trust_minimum_cents", 0) or 0)
+    initial_retainer_dollars = float(data.get("initial_retainer", 0) or data.get("initial_retainer_cents", 0) or 0)
+    monthly_payment_dollars = float(data.get("monthly_payment", 0) or data.get("monthly_payment_cents", 0) or 0)
+    trust_minimum_dollars = float(data.get("trust_minimum", 0) or data.get("trust_minimum_cents", 0) or 0)
 
     # Enforce minimum addon of $1,000 if set
     if addon_dollars > 0 and addon_dollars < 1000:

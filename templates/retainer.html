@@ -366,6 +366,13 @@ document.getElementById('btnPay').addEventListener('click', async () => {
         return;
     }
 
+    // No payment needed (fully paid at office)
+    if (piData.paid) {
+        document.getElementById('successBanner').style.display = 'block';
+        document.getElementById('paySection').style.display = 'none';
+        return;
+    }
+
     // Confirm payment
     const { error, paymentIntent } = await stripe.confirmCardPayment(piData.clientSecret, {
         payment_method: { card: cardElement },

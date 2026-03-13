@@ -104,6 +104,12 @@ def create_payment_intent():
     agreement.amount = amount_cents
     db.session.commit()
 
+    if amount_cents < 50:
+        # No payment needed (fully paid at office or $0 amount)
+        session.funnel_step = "retainer_signed"
+        db.session.commit()
+        return jsonify({"clientSecret": None, "amount": 0, "paid": True})
+
     try:
         pi = stripe.PaymentIntent.create(
             amount=amount_cents,
