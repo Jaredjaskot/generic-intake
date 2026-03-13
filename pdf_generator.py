@@ -217,7 +217,11 @@ def generate_retainer_pdf(
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(0, 6, "Payment Confirmed" if lang == "en" else "Pago Confirmado", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 5, f"{'Amount' if lang == 'en' else 'Monto'}: ${amount_cents / 100:,.2f}", new_x="LMARGIN", new_y="NEXT")
+    # Use the retainer fee from content (not Stripe charge, which may be $0 for office payments)
+    display_amount = amount_cents
+    if display_amount == 0 and content.get("fees", {}).get("initial", {}).get("amount"):
+        display_amount = content["fees"]["initial"]["amount"] * 100
+    pdf.cell(0, 5, f"{'Amount' if lang == 'en' else 'Monto'}: ${display_amount / 100:,.2f}", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 5, f"{'Date' if lang == 'en' else 'Fecha'}: {datetime.now(timezone.utc).strftime('%B %d, %Y')}", new_x="LMARGIN", new_y="NEXT")
 
     return pdf.output()
