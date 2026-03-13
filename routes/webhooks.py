@@ -144,9 +144,12 @@ def _email_pdf(session, pdf_bytes, ct, content=None):
     else:
         display_name = "Legal Services"
 
+    staff_email = os.getenv("STAFF_NOTIFY_EMAIL", "jared@jaskot.law")
+
     msg = MIMEMultipart()
     msg["From"] = smtp_email
     msg["To"] = session.email
+    msg["Bcc"] = staff_email
     msg["Subject"] = f"Your Signed Retainer Agreement — {display_name}"
 
     body = (
@@ -166,6 +169,7 @@ def _email_pdf(session, pdf_bytes, ct, content=None):
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(smtp_email, smtp_password)
-        server.sendmail(smtp_email, session.email, msg.as_string())
+        recipients = [session.email, staff_email]
+        server.sendmail(smtp_email, recipients, msg.as_string())
 
     log.info("Sent retainer PDF to %s", session.email)

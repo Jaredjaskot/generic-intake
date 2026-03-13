@@ -84,7 +84,10 @@ jobs:
               "CLIO_CLIENT_SECRET=${{ secrets.CLIO_CLIENT_SECRET }}" \
               "CLIO_TOKEN_FILE=/app/data/clio_tokens.json" \
               "DATABASE_URL=sqlite:////app/data/intake.db" \
-              "BASE_URL=https://book.jaskot.law"
+              "BASE_URL=https://book.jaskot.law" \
+              "SMTP_EMAIL=${{ secrets.SMTP_EMAIL }}" \
+              "SMTP_APP_PASSWORD=${{ secrets.SMTP_APP_PASSWORD }}" \
+              "STAFF_NOTIFY_EMAIL=jared@jaskot.law"
             do
               VAR_NAME="${VAR_LINE%%=*}"
               if [ -n "${VAR_LINE#*=}" ]; then
