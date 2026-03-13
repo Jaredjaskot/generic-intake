@@ -52,12 +52,20 @@ jobs:
               git clone https://github.com/Jaredjaskot/jaskot-config.git "$CONFIG_PATH"
             fi
 
-            # Clone/update generic-intake via SSH
+            # Clone/update generic-intake
             echo "[1/5] Pulling latest code..."
             if [ -d "$DEPLOY_PATH/.git" ]; then
               cd "$DEPLOY_PATH" && git fetch origin main && git reset --hard origin/main
             else
-              git clone https://github.com/Jaredjaskot/generic-intake.git "$DEPLOY_PATH"
+              # Directory may exist but not be a git repo — clone into temp then move
+              TEMP_CLONE="/tmp/generic-intake-clone"
+              rm -rf "$TEMP_CLONE"
+              git clone https://github.com/Jaredjaskot/generic-intake.git "$TEMP_CLONE"
+              # Preserve data/ and .env
+              cp -r "$DEPLOY_PATH/data" "$TEMP_CLONE/data" 2>/dev/null || true
+              cp "$DEPLOY_PATH/.env" "$TEMP_CLONE/.env" 2>/dev/null || true
+              rm -rf "$DEPLOY_PATH"
+              mv "$TEMP_CLONE" "$DEPLOY_PATH"
             fi
 
             cd "$DEPLOY_PATH"
