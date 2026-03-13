@@ -44,21 +44,26 @@ jobs:
             # Ensure directories exist
             mkdir -p "$DEPLOY_PATH" "$DEPLOY_PATH/data"
 
-            # Clone/update jaskot-config
+            # Clone/update jaskot-config via SSH
+            echo "[0/5] Updating jaskot-config..."
             if [ -d "$CONFIG_PATH/.git" ]; then
               cd "$CONFIG_PATH" && git fetch origin main && git reset --hard origin/main
             else
-              git clone https://github.com/Jaredjaskot/jaskot-config.git "$CONFIG_PATH" 2>/dev/null || true
-              # If no repo, copy from sijs-intake or fail gracefully
-              if [ ! -d "$CONFIG_PATH" ]; then
-                echo "WARNING: jaskot-config not available"
-              fi
+              git clone git@github.com:Jaredjaskot/jaskot-config.git "$CONFIG_PATH"
+            fi
+
+            # Clone/update generic-intake via SSH
+            echo "[1/5] Pulling latest code..."
+            if [ -d "$DEPLOY_PATH/.git" ]; then
+              cd "$DEPLOY_PATH" && git fetch origin main && git reset --hard origin/main
+            else
+              git clone git@github.com:Jaredjaskot/generic-intake.git "$DEPLOY_PATH"
             fi
 
             cd "$DEPLOY_PATH"
 
             # Update .env
-            echo "[0/3] Updating environment variables..."
+            echo "[2/5] Updating environment variables..."
             ENV_FILE="$DEPLOY_PATH/.env"
             touch "$ENV_FILE"
             for VAR_LINE in \
@@ -83,21 +88,16 @@ jobs:
               fi
             done
 
-            # Pull latest code
-            echo "[1/4] Pulling latest code..."
-            git fetch origin main
-            git reset --hard origin/main
-
             # Copy jaskot-config into build context
-            echo "[2/4] Copying jaskot-config into build context..."
+            echo "[3/5] Copying jaskot-config into build context..."
             rm -rf "$DEPLOY_PATH/_jaskot-config"
             cp -r "$CONFIG_PATH" "$DEPLOY_PATH/_jaskot-config"
+            rm -rf "$DEPLOY_PATH/_jaskot-config/.git"
 
             # Update Caddy config to add /intake* route
-            echo "[3/4] Checking Caddy config..."
+            echo "[4/5] Checking Caddy config..."
             CADDY_FILE="/opt/calcom/Caddyfile"
             if ! grep -q 'generic-intake:5001' "$CADDY_FILE" 2>/dev/null; then
-              # Insert generic-intake route before the Cal.com catch-all
               sed -i '/# Everything else/i\    # Generic intake funnel routes → generic-intake container\n    handle /intake* {\n        reverse_proxy generic-intake:5001\n    }\n' "$CADDY_FILE"
               docker exec calcom-caddy caddy reload --config /etc/caddy/Caddyfile
               echo "Caddy config updated — added /intake* route"
@@ -106,12 +106,12 @@ jobs:
             fi
 
             # Build and restart
-            echo "[4/4] Building and restarting..."
-            docker compose down
+            echo "[5/5] Building and restarting..."
+            docker compose down 2>/dev/null || true
             docker compose up -d --build
 
             # Health check
-            echo "[3/3] Verifying health..."
+            echo "Verifying health..."
             sleep 10
             STATUS=$(curl -sf "http://localhost:5001/intake/health" | grep -o '"status":"ok"' || echo 'UNHEALTHY')
 
