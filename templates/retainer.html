@@ -212,6 +212,17 @@
     <!-- Signature -->
     <div class="sig-card locked" id="sigSection" style="margin-top: 24px;">
         <div class="sig-heading">{{ content.signature.client_label }}</div>
+        {% if session.client_signatory and session.client_signatory != session.name %}
+        <div style="margin-bottom: 8px; font-size: 15px; color: #4a4a4a;">
+            {% if lang == 'es' %}
+                <strong>Cliente:</strong> {{ session.name }}<br>
+                <strong>Firmante:</strong> {{ session.client_signatory }}
+            {% else %}
+                <strong>Client:</strong> {{ session.name }}<br>
+                <strong>Signed by:</strong> {{ session.client_signatory }}
+            {% endif %}
+        </div>
+        {% endif %}
         <div class="sig-agreement-text">{{ content.signature.agreement_text }}</div>
         <div class="sig-canvas-wrapper" id="sigWrapper">
             <canvas id="signatureCanvas"></canvas>
