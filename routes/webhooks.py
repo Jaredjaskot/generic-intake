@@ -135,17 +135,9 @@ def _process_post_payment(app, session_id, agreement_id, metadata):
 
 
 def _email_pdf(session, pdf_bytes, ct, content=None):
-    """Email signed retainer PDF to client."""
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.base import MIMEBase
-    from email.mime.text import MIMEText
-    from email import encoders
-
-    smtp_email = os.getenv("SMTP_EMAIL")
-    smtp_password = os.getenv("SMTP_APP_PASSWORD")
-    if not smtp_email or not smtp_password or not session.email:
-        log.info("Skipping PDF email — missing SMTP creds or client email")
+    """Email signed retainer PDF to client via Gmail API (HTTPS)."""
+    if not session.email:
+        log.info("Skipping PDF email — no client email")
         return
 
     # Resolve display name: case type object, custom name, or content title
@@ -159,31 +151,34 @@ def _email_pdf(session, pdf_bytes, ct, content=None):
         display_name = "Legal Services"
 
     staff_email = os.getenv("STAFF_NOTIFY_EMAIL", "jared@jaskot.law")
+    lang = session.lang or "en"
 
-    msg = MIMEMultipart()
-    msg["From"] = smtp_email
-    msg["To"] = session.email
-    msg["Bcc"] = staff_email
-    msg["Subject"] = f"Your Signed Retainer Agreement — {display_name}"
+    if lang == "es":
+        subject = f"Su Contrato de Servicios Firmado — {display_name}"
+        first_name = session.name.split()[0] if session.name else ""
+        body = (
+            f"Estimado/a {first_name},\n\n"
+            f"Adjunto encontrará su contrato de servicios legales firmado para {display_name} "
+            f"con Jaskot Law.\n\n"
+            f"Por favor guarde este documento para sus registros. Si tiene alguna pregunta, "
+            f"no dude en comunicarse con nosotros al (240) 607-5244 o info@jaskot.law.\n\n"
+            f"Atentamente,\nJaskot Law"
+        )
+    else:
+        subject = f"Your Signed Retainer Agreement — {display_name}"
+        body = (
+            f"Dear {session.name},\n\n"
+            f"Please find attached your signed retainer agreement for {display_name} "
+            f"with Jaskot Law.\n\n"
+            f"If you have any questions, please contact us at info@jaskot.law or (240) 607-5244.\n\n"
+            f"Best regards,\nJaskot Law"
+        )
 
-    body = (
-        f"Dear {session.name},\n\n"
-        f"Please find attached your signed retainer agreement for {display_name} "
-        f"with Jaskot Law.\n\n"
-        f"If you have any questions, please contact us at info@jaskot.law or (240) 607-5244.\n\n"
-        f"Best regards,\nJaskot Law"
+    from integrations.gmail_sender import send_email
+    send_email(
+        to_email=session.email,
+        subject=subject,
+        body=body,
+        attachments=[("Retainer_Agreement.pdf", pdf_bytes)],
+        bcc=staff_email,
     )
-    msg.attach(MIMEText(body, "plain"))
-
-    attachment = MIMEBase("application", "pdf")
-    attachment.set_payload(pdf_bytes)
-    encoders.encode_base64(attachment)
-    attachment.add_header("Content-Disposition", "attachment", filename="Retainer_Agreement.pdf")
-    msg.attach(attachment)
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(smtp_email, smtp_password)
-        recipients = [session.email, staff_email]
-        server.sendmail(smtp_email, recipients, msg.as_string())
-
-    log.info("Sent retainer PDF to %s", session.email)

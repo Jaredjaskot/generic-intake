@@ -16,6 +16,9 @@ on:
 #   SECRET_KEY           — Flask secret key
 #   CLIO_CLIENT_ID       — Clio OAuth client ID
 #   CLIO_CLIENT_SECRET   — Clio OAuth client secret
+#   GMAIL_CLIENT_ID      — Google OAuth2 client ID (for Gmail API email)
+#   GMAIL_CLIENT_SECRET  — Google OAuth2 client secret
+#   GMAIL_REFRESH_TOKEN  — Google OAuth2 refresh token for info@jaskot.law
 # ================================================================
 
 jobs:
@@ -91,7 +94,10 @@ jobs:
               "DROPBOX_APP_KEY=${{ secrets.DROPBOX_APP_KEY }}" \
               "DROPBOX_APP_SECRET=${{ secrets.DROPBOX_APP_SECRET }}" \
               "DROPBOX_REFRESH_TOKEN=${{ secrets.DROPBOX_REFRESH_TOKEN }}" \
-              "DROPBOX_RETAINER_PATH=${{ secrets.DROPBOX_RETAINER_PATH }}"
+              "DROPBOX_RETAINER_PATH=${{ secrets.DROPBOX_RETAINER_PATH }}" \
+              "GMAIL_CLIENT_ID=${{ secrets.GMAIL_CLIENT_ID }}" \
+              "GMAIL_CLIENT_SECRET=${{ secrets.GMAIL_CLIENT_SECRET }}" \
+              "GMAIL_REFRESH_TOKEN=${{ secrets.GMAIL_REFRESH_TOKEN }}"
             do
               VAR_NAME="${VAR_LINE%%=*}"
               if [ -n "${VAR_LINE#*=}" ]; then
