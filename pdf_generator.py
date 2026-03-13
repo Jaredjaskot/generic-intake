@@ -164,8 +164,8 @@ def generate_retainer_pdf(
             _add_body_text(pdf, term["text_after"])
 
     # Addon
-    if "addon" in content:
-        addon = content["addon"]
+    addon = content.get("addon")
+    if addon:
         _add_section_heading(pdf, addon["heading"])
         _add_body_text(pdf, addon["text"])
         for term in content.get("addon_terms", []):
