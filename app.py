@@ -15,7 +15,7 @@ def create_app():
     app = Flask(__name__)
     app.secret_key = os.getenv("SECRET_KEY", os.urandom(32).hex())
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-        "DATABASE_URL", "sqlite:///intake.db"
+        "DATABASE_URL", "sqlite:///data/intake.db"
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
