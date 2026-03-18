@@ -19,12 +19,16 @@ on:
 #   GMAIL_CLIENT_ID      — Google OAuth2 client ID (for Gmail API email)
 #   GMAIL_CLIENT_SECRET  — Google OAuth2 client secret
 #   GMAIL_REFRESH_TOKEN  — Google OAuth2 refresh token for info@jaskot.law
+#   SLACK_DEPLOY_WEBHOOK_URL — Slack webhook for deploy notifications
 # ================================================================
 
 jobs:
   deploy:
     name: Deploy to Droplet
     runs-on: ubuntu-latest
+
+    env:
+      SLACK_DEPLOY_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL }}
 
     steps:
       - uses: actions/checkout@v4
@@ -35,11 +39,14 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: SLACK_DEPLOY_WEBHOOK_URL
           script_stop: true
           script: |
             set -e
             echo "=== Deploying generic-intake ==="
             echo "Commit: ${{ github.sha }}"
+            echo "Triggered by: ${{ github.actor }}"
+            echo ""
 
             DEPLOY_PATH="/opt/generic-intake"
             CONFIG_PATH="/opt/jaskot-config"
@@ -47,20 +54,50 @@ jobs:
             # Ensure directories exist
             mkdir -p "$DEPLOY_PATH" "$DEPLOY_PATH/data"
 
-            # Clone/update jaskot-config via SSH
-            echo "[0/5] Updating jaskot-config..."
+            # ── Rollback function ──
+            rollback() {
+              echo "!!! ROLLBACK triggered !!!"
+              PREV_COMMIT=$(cat /tmp/deploy-prev-commit-generic 2>/dev/null || echo "unknown")
+              if [ "$PREV_COMMIT" != "unknown" ] && [ -n "$PREV_COMMIT" ]; then
+                echo "Rolling back to $PREV_COMMIT..."
+                cd "$DEPLOY_PATH"
+                git reset --hard "$PREV_COMMIT"
+                # Re-copy jaskot-config for build context
+                rm -rf "$DEPLOY_PATH/_jaskot-config"
+                cp -r "$CONFIG_PATH" "$DEPLOY_PATH/_jaskot-config"
+                rm -rf "$DEPLOY_PATH/_jaskot-config/.git"
+                docker compose up -d --build --force-recreate
+                echo "Rollback complete — now at $(git rev-parse HEAD)"
+              else
+                echo "No previous commit recorded, cannot auto-rollback"
+              fi
+              # Slack failure alert
+              if [ -n "$SLACK_DEPLOY_WEBHOOK_URL" ]; then
+                curl -sf -X POST -H 'Content-type: application/json' \
+                  --data "{\"text\":\"🚨 *generic-intake deploy FAILED* — rolled back to \`${PREV_COMMIT:0:7}\`\nCommit: \`${{ github.sha }}\`\nActor: ${{ github.actor }}\"}" \
+                  "$SLACK_DEPLOY_WEBHOOK_URL" || true
+              fi
+            }
+
+            # ── [1/7] Update jaskot-config ──
+            echo "[1/7] Updating jaskot-config..."
             if [ -d "$CONFIG_PATH/.git" ]; then
               cd "$CONFIG_PATH" && git fetch origin main && git reset --hard origin/main
             else
               git clone https://github.com/Jaredjaskot/jaskot-config.git "$CONFIG_PATH"
             fi
 
-            # Clone/update generic-intake
-            echo "[1/5] Pulling latest code..."
+            # ── [2/7] Pull latest code ──
+            echo "[2/7] Pulling latest code..."
             if [ -d "$DEPLOY_PATH/.git" ]; then
-              cd "$DEPLOY_PATH" && git fetch origin main && git reset --hard origin/main
+              cd "$DEPLOY_PATH"
+              PREV_COMMIT=$(git rev-parse HEAD)
+              echo "$PREV_COMMIT" > /tmp/deploy-prev-commit-generic
+              echo "  Previous commit: $PREV_COMMIT"
+              git fetch origin main && git reset --hard origin/main
             else
               # Directory may exist but not be a git repo — clone into temp then move
+              echo "unknown" > /tmp/deploy-prev-commit-generic
               TEMP_CLONE="/tmp/generic-intake-clone"
               rm -rf "$TEMP_CLONE"
               git clone https://github.com/Jaredjaskot/generic-intake.git "$TEMP_CLONE"
@@ -73,8 +110,8 @@ jobs:
 
             cd "$DEPLOY_PATH"
 
-            # Update .env
-            echo "[2/5] Updating environment variables..."
+            # ── [3/7] Update environment variables ──
+            echo "[3/7] Updating environment variables..."
             ENV_FILE="$DEPLOY_PATH/.env"
             touch "$ENV_FILE"
             for VAR_LINE in \
@@ -109,14 +146,14 @@ jobs:
               fi
             done
 
-            # Copy jaskot-config into build context
-            echo "[3/5] Copying jaskot-config into build context..."
+            # ── [4/7] Copy jaskot-config into build context ──
+            echo "[4/7] Copying jaskot-config into build context..."
             rm -rf "$DEPLOY_PATH/_jaskot-config"
             cp -r "$CONFIG_PATH" "$DEPLOY_PATH/_jaskot-config"
             rm -rf "$DEPLOY_PATH/_jaskot-config/.git"
 
-            # Update Caddy config to add /intake* route
-            echo "[4/5] Checking Caddy config..."
+            # ── [5/7] Update Caddy config ──
+            echo "[5/7] Checking Caddy config..."
             CADDY_FILE="/opt/calcom/Caddyfile"
             if ! grep -q 'generic-intake:5001' "$CADDY_FILE" 2>/dev/null; then
               sed -i '/# Everything else/i\    # Generic intake funnel routes → generic-intake container\n    handle /intake* {\n        reverse_proxy generic-intake:5001\n    }\n' "$CADDY_FILE"
@@ -126,23 +163,39 @@ jobs:
               echo "Caddy config already has generic-intake route"
             fi
 
-            # Build and restart
-            echo "[5/5] Building and restarting..."
-            docker compose down 2>/dev/null || true
-            docker compose up -d --build
+            # ── [6/7] Build and restart ──
+            echo "[6/7] Building and restarting..."
+            docker compose up -d --build --force-recreate
 
-            # Health check
-            echo "Verifying health..."
-            sleep 10
-            STATUS=$(curl -sf "http://localhost:5001/intake/health" | grep -o '"status":"ok"' || echo 'UNHEALTHY')
+            # ── [7/7] Health check with retry loop ──
+            echo "[7/7] Verifying health (up to 60s)..."
+            HEALTHY=false
+            for i in $(seq 1 20); do
+              sleep 3
+              STATUS=$(curl -sf "http://localhost:5001/intake/health" | grep -o '"status":"ok"' || echo '')
+              if [ -n "$STATUS" ]; then
+                HEALTHY=true
+                echo "  Health check passed on attempt $i"
+                break
+              fi
+              echo "  Attempt $i/20: waiting..."
+            done
 
+            if [ "$HEALTHY" != "true" ]; then
+              echo ""
+              echo "!!! Health check FAILED after 20 attempts !!!"
+              echo ""
+              echo "=== Container logs (last 50 lines) ==="
+              docker compose logs --tail=50 --no-color 2>&1 || true
+              rollback
+              exit 1
+            fi
+
+            # ── Slack success notification ──
             echo ""
             echo "=== Deploy Complete ==="
-            echo "Health: $STATUS"
-
-            if [ "$STATUS" = "UNHEALTHY" ]; then
-              echo "WARNING: Service is unhealthy!"
-              echo "--- Container logs ---"
-              docker compose logs --tail=50
-              exit 1
+            if [ -n "$SLACK_DEPLOY_WEBHOOK_URL" ]; then
+              curl -sf -X POST -H 'Content-type: application/json' \
+                --data "{\"text\":\"✅ *generic-intake deployed*\nCommit: \`${{ github.sha }}\`\nActor: ${{ github.actor }}\"}" \
+                "$SLACK_DEPLOY_WEBHOOK_URL" || true
             fi
