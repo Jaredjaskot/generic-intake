@@ -2,6 +2,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# git needed for pip git+ dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+
 # Install jaskot-config (copied into _jaskot-config/ by deploy script)
 COPY _jaskot-config /opt/jaskot-config
 RUN pip install --no-cache-dir /opt/jaskot-config
