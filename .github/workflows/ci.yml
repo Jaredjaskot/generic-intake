@@ -40,7 +40,7 @@ jobs:
           flake8 . \
             --select=E9,F63,F7,F82 \
             --max-line-length=200 \
-            --exclude=venv,.venv,__pycache__,_jaskot-config \
+            --exclude=venv,.venv,__pycache__,_jaskot-config,_jaskot-clio \
             --count --show-source --statistics
 
   boot-smoke-test:
@@ -54,6 +54,11 @@ jobs:
         run: |
           git clone https://github.com/Jaredjaskot/jaskot-config.git _jaskot-config
           rm -rf _jaskot-config/.git
+
+      - name: Clone jaskot-clio into build context
+        run: |
+          git clone https://github.com/Jaredjaskot/jaskot-clio.git _jaskot-clio
+          rm -rf _jaskot-clio/.git
 
       - name: Build Docker image
         run: docker build -t generic-intake-smoke-test .

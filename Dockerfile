@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /
 COPY _jaskot-config /opt/jaskot-config
 RUN pip install --no-cache-dir /opt/jaskot-config
 
+# Install jaskot-clio (copied into _jaskot-clio/ by deploy script / CI)
+COPY _jaskot-clio /opt/jaskot-clio
+RUN pip install --no-cache-dir /opt/jaskot-clio
 # Install app dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
