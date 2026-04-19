@@ -146,13 +146,25 @@ jobs:
               fi
             done
 
-            # ── [4/7] Copy jaskot-config into build context ──
-            echo "[4/7] Copying jaskot-config into build context..."
+            # ── [4/8] Copy jaskot-config into build context ──
+            echo "[4/8] Copying jaskot-config into build context..."
             rm -rf "$DEPLOY_PATH/_jaskot-config"
             cp -r "$CONFIG_PATH" "$DEPLOY_PATH/_jaskot-config"
             rm -rf "$DEPLOY_PATH/_jaskot-config/.git"
 
-            # ── [5/7] Update Caddy config ──
+            # ── [5/8] Clone/update jaskot-clio into build context ──
+            echo "[5/8] Updating jaskot-clio..."
+            CLIO_PATH="/opt/jaskot-clio"
+            if [ -d "$CLIO_PATH/.git" ]; then
+              cd "$CLIO_PATH" && git fetch origin main && git reset --hard origin/main
+            else
+              git clone https://github.com/Jaredjaskot/jaskot-clio.git "$CLIO_PATH"
+            fi
+            rm -rf "$DEPLOY_PATH/_jaskot-clio"
+            cp -r "$CLIO_PATH" "$DEPLOY_PATH/_jaskot-clio"
+            rm -rf "$DEPLOY_PATH/_jaskot-clio/.git"
+
+            # ── [6/8] Update Caddy config ──
             echo "[5/7] Checking Caddy config..."
             CADDY_FILE="/opt/calcom/Caddyfile"
             if ! grep -q 'generic-intake:5001' "$CADDY_FILE" 2>/dev/null; then
@@ -163,12 +175,12 @@ jobs:
               echo "Caddy config already has generic-intake route"
             fi
 
-            # ── [6/7] Build and restart ──
-            echo "[6/7] Building and restarting..."
+            # ── [7/8] Build and restart ──
+            echo "[7/8] Building and restarting..."
             docker compose up -d --build --force-recreate
 
-            # ── [7/7] Health check with retry loop ──
-            echo "[7/7] Verifying health (up to 60s)..."
+            # ── [8/8] Health check with retry loop ──
+            echo "[8/8] Verifying health (up to 60s)..."
             HEALTHY=false
             for i in $(seq 1 20); do
               sleep 3

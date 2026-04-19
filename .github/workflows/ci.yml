@@ -40,7 +40,7 @@ jobs:
           flake8 . \
             --select=E9,F63,F7,F82 \
             --max-line-length=200 \
-            --exclude=venv,.venv,__pycache__,_jaskot-config \
+            --exclude=venv,.venv,__pycache__,_jaskot-config,_jaskot-clio \
             --count --show-source --statistics
 
   boot-smoke-test:
@@ -50,10 +50,66 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Clone jaskot-config into build context
+      - name: Create jaskot-config stub for Docker build
         run: |
-          git clone https://github.com/Jaredjaskot/jaskot-config.git _jaskot-config
-          rm -rf _jaskot-config/.git
+          # jaskot-config is a private repo. Production deploys clone it with a PAT.
+          # CI uses a minimal pip-installable stub so the Docker build can complete.
+          mkdir -p _jaskot-config/jaskot_config
+          cat > _jaskot-config/pyproject.toml << 'EOF'
+          [build-system]
+          requires = ["setuptools>=68.0"]
+          build-backend = "setuptools.build_meta"
+          [project]
+          name = "jaskot-config"
+          version = "999.0.0+ci"
+          requires-python = ">=3.10"
+          dependencies = ["requests>=2.28.0"]
+          EOF
+          cat > _jaskot-config/jaskot_config/__init__.py << 'STUB'
+          from dataclasses import dataclass
+
+          @dataclass(frozen=True)
+          class CaseType:
+              key: str = ""
+              display_name: str = ""
+              display_name_es: str = ""
+              base_fee_cents: int = 0
+              fee_type: str = "hourly"
+              calcom_event_type_id: int = 0
+              calcom_virtual_event_type_id: int | None = None
+              ghl_tag_prefix: str = ""
+              clio_practice_area_id: int | None = None
+              scope_en: str = ""
+              scope_es: str = ""
+
+          _registry = {}
+          def register(ct):
+              _registry[ct.key] = ct
+              return ct
+          def get(key):
+              return _registry.get(key, CaseType(key=key))
+          def all_case_types():
+              return list(_registry.values())
+          def choices():
+              return [(ct.key, ct.display_name) for ct in _registry.values()]
+          def get_retainer_content(case_type_key="", lang="en", fee_type=None, overrides=None):
+              return {}
+          def get_document_checklist(case_type_key="", lang="en"):
+              return []
+          def ghl_safe(*a, **kw): return None
+          def ghl_headers(): return {}
+          def find_or_create_contact(*a, **kw): return {}
+          def tag_contact(*a, **kw): return None
+          def add_note(*a, **kw): return None
+          def send_message(*a, **kw): return None
+          def get_pipeline_stages(*a, **kw): return []
+          def create_or_update_opportunity(*a, **kw): return {}
+          STUB
+
+      - name: Clone jaskot-clio into build context
+        run: |
+          git clone https://github.com/Jaredjaskot/jaskot-clio.git _jaskot-clio
+          rm -rf _jaskot-clio/.git
 
       - name: Build Docker image
         run: docker build -t generic-intake-smoke-test .
